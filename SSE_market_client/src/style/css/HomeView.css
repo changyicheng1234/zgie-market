@@ -1,0 +1,114 @@
+.home-view {
+  position: relative;
+}
+
+.back_button {
+  position: absolute;
+  z-index: 100;
+}
+
+.card-shadow {
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+  border: none;
+  background-color: #f8f9fa;
+  max-width: 1200px;
+  /*margin-left: 200px;*/
+}
+
+.author-box {
+  color: white;
+  padding: 0.25rem 0.5rem;
+  width: auto;
+  display: inline-block;
+  border-radius: 0.25rem;
+}
+
+.title-font-size {
+  font-size: 1.2rem;
+  font-weight: bold;
+  font-family: 'Times New Roman';
+}
+
+.content-font-size {
+  font-size: 1rem;
+  line-height: 1.5;
+  font-family: 'Arial';
+}
+
+.text-color {
+  color: #6c757d;
+}
+
+.custom-modal .modal-dialog {
+  max-width: 800px;
+  max-height: 200px;
+}
+
+.login-section {
+  position: absolute;
+  /*margin-left: 1150px;*/
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 200px; /* 设置高度以便撑开容器 */
+  width: 300px;
+  background: url('https://sse-market-source-1320172928.cos.ap-guangzhou.myqcloud.com/assets/image/background3.jpg'); /* 设置背景图片 */
+  background-size: cover; /* 背景图片铺满整个div */
+}
+
+.audio-section {
+  position: absolute;
+  margin-top:250px;
+  /*margin-left: 1150px;*/
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 200px; /* 设置高度以便撑开容器 */
+  width: 300px;
+  background: url('https://sse-market-source-1320172928.cos.ap-guangzhou.myqcloud.com/assets/image/珠海校区背景.png'); /* 设置背景图片 */
+  background-size: cover; /* 背景图片铺满整个div */
+}
+.register-button {
+  background: none;
+  border: none;
+  color: blue;
+  text-decoration: underline;
+  cursor: pointer;
+  z-index: 100;
+}
+
+.click:hover {
+  background-color: #f5f5f5;
+}
+
+.click:active {
+  background-color: #e0e0e0;
+}
+
+.thumbnail-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+.thumbnail-container div {
+  width: calc(100% / 3);
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.video-section {
+  position: absolute;
+  margin-top:300px;
+  /*margin-left: 1150px;*/
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 200px; /* 设置高度以便撑开容器 */
+  width: 300px;
+  /* background: url('@/assets/image/珠海校区背景.png');
+  background-size: cover;  */
+}
+
+.video-section video {
+  max-width: 100%; /* 设置最大宽度为容器宽度 */
+  max-height: 100%; /* 设置最大高度为容器高度 */
+}

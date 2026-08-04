@@ -1,0 +1,10 @@
+config/application.yml
+loginTest.exe
+public/uploads
+public/resized
+ssl
+.env
+.vscode
+.idea
+.DS_Store
+*.DS_Store

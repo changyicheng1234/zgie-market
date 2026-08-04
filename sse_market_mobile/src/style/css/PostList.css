@@ -1,0 +1,168 @@
+.icon-container {
+    position: absolute;
+    top: 0.2rem;
+    right: 0.2rem;
+    z-index: 999; /* Ensure the icon is above other elements */
+}
+
+.custom-search-button {
+    background-color: #a9ddff;
+    color: #ffffff;
+}
+
+.banner {
+    width: 1000px;
+    height: 304px;
+    background: pink;
+}
+
+.avatar {
+    width: 50px;
+    height: 50px;
+}
+
+.author {
+    height: 115px;
+    width: 100%;
+    font-size: medium;
+}
+
+.post {
+    display: flex;
+}
+
+.author_box {
+    height: 1rem;
+    width: 2rem;
+    font-size: 20px;
+    color: midnightblue;
+}
+
+.post_title {
+    vertical-align: middle;
+    text-align: left;
+    font-size: 32px;
+    font-weight: bold;
+    margin-left: 50px;
+    margin-top: 5px;
+}
+
+.post_content {
+    /*vertical-align: middle;*/
+    margin-left: 50px;
+    margin-right: 45px;
+    text-align: left;
+    font-size: 27px;
+    white-space: pre-wrap;
+    word-wrap: anywhere;
+}
+
+.tips {
+    vertical-align: middle;
+    text-align: center;
+}
+
+.horizontal-container {
+    display: flex;
+    justify-content: space-between; /* 将子元素水平分隔放置 */
+    align-items: center; /* 垂直居中对齐子元素 */
+}
+
+.date {
+    height: 5%;
+    flex: 1;
+}
+
+.container {
+    position: relative;
+    background: linear-gradient(to bottom, #a9ddff, #87cefa);
+    padding: 20px;
+}
+
+h2 {
+    font-size: 60px;
+    color: #333333;
+    margin-bottom: 20px;
+}
+
+.search-container {
+    padding: 20px;
+    border-radius: 10px;
+    overflow: hidden; /* 隐藏搜索框背景的溢出部分 */
+}
+
+.van-search__input {
+    background: rgba(255, 255, 255, 0.5); /* 将搜索框内部白色部分设为半透明白色 */
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.custom-search-button {
+    background: linear-gradient(to bottom, #a9ddff, #87cefa);
+    color: #ffffff;
+    cursor: pointer;
+    padding: 10px 20px;
+    border-radius: 20px;
+}
+
+
+
+.username-row {
+    display: flex;
+    align-items: center;
+}
+
+.avatarContainer {
+    margin-left: 30px; /* 调整头像容器的右边距 */
+}
+
+.username-container {
+}
+
+.username {
+    vertical-align: top;
+    font-size: 30px;
+}
+
+.thumbnail-container {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.thumbnail-container div {
+    width: calc(100% / 3);
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.tag-group {
+    margin-top: -40px;
+    margin-left: 500px;
+}
+.photo{
+    width: 200px;
+    height: 200px;
+}
+.wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+.post-like {
+    font-size: 25px;
+    vertical-align: 1.2px;
+    margin: 0.8px;
+}
+
+.browse-like {
+    font-size: 25px;
+    vertical-align: 2px;
+    margin: 1px;
+}
+
+.comment-like {
+    font-size: 25px;
+    vertical-align: 3px;
+    margin: 1px;
+}

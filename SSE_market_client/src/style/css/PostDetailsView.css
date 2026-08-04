@@ -1,0 +1,42 @@
+@import '~highlight.js/styles/github.css';
+.author-box {
+    color: white;
+    padding: 0.25rem 0.5rem;
+    width: auto;
+    display: inline-block;
+    border-radius: 0.25rem;
+}
+
+.title-font-size {
+    font-size: 1.2rem;
+    font-weight: bold;
+    font-family: 'Times New Roman';
+}
+
+.content-font-size {
+    font-size: 1rem;
+    line-height: 1.5;
+    font-family: 'Arial';
+}
+
+.text-muted {
+    font-size: 14px;
+}
+
+/* 下面是动画效果的样式*/
+.comment-list-enter-active,
+.comment-list-leave-active {
+    transition: all .3s cubic-bezier(0.55, 0, 0.1, 1);
+}
+.comment-list-enter,
+.comment-list-leave-to {
+    opacity: 0;
+    transform: translateY(-20px);
+}
+
+.modal-backdrop {
+    opacity: 0.5;
+    background-color: #000000;
+    backdrop-filter: blur(5px);
+}
+

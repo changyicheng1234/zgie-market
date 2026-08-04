@@ -1,0 +1,19 @@
+.van-tabbar {
+    height: 55px;
+    background-color: #f0f0f0;
+}
+
+.van-tabbar-item {
+    font-size: 10px;
+}
+
+.van-icon {
+    font-size: 25px;
+}
+.van-tabbar {
+    background-color: #ffffff !important; /* 白色背景 */
+}
+.active {
+    color: rgb(17, 167, 226);
+
+}

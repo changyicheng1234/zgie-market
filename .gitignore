@@ -1,0 +1,18 @@
+# 敏感配置文件，绝对不能提交
+SSE_market_server/config/application.yml
+SSE_market_server/.env
+
+# 依赖和构建产物
+SSE_market_client/node_modules/
+SSE_market_client/dist/
+sse_market_mobile/node_modules/
+sse_market_mobile/dist/
+
+# Go 编译产物
+SSE_market_server/*.exe
+SSE_market_server/loginTest
+
+# 系统文件
+.DS_Store
+*.DS_Store
+Thumbs.db

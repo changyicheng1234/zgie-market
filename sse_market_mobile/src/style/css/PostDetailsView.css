@@ -1,0 +1,76 @@
+.author-box {
+    color: white;
+    padding: 0.25rem 0.5rem;
+    width: 0.5rem;
+    height: 0.25rem;
+    border-radius: 0.25rem;
+}
+.comment-author-name{
+    display: flex;
+    align-items: center;
+    height: 50px;
+    font-size:20px;
+    color: #888888;
+}
+.title-font-size {
+    font-size: 30px;
+    font-weight: bold;
+    font-family: 'Times New Roman';
+}
+
+.content-font-size {
+    font-size: 20px;
+    line-height: 1.5;
+    font-family: 'Arial';
+}
+
+.text-muted {
+    margin: 20px;
+    font-size: 14px;
+}
+
+/* 下面是动画效果的样式*/
+.comment-list-enter-active,
+.comment-list-leave-active {
+    transition: all .3s cubic-bezier(0.55, 0, 0.1, 1);
+}
+.comment-list-enter,
+.comment-list-leave-to {
+    opacity: 0;
+    transform: translateY(-20px);
+}
+
+.modal-backdrop {
+    opacity: 0.5;
+    background-color: #000000;
+    backdrop-filter: blur(5px);
+}
+
+.comment {
+    margin-bottom: 100px;
+    margin-right: 35px;
+    margin-left: 20px;
+}
+.comment-content{
+    text-align: left;
+    font-size: 30px;
+    white-space: pre-wrap;
+    word-wrap: anywhere;
+}
+.post-like {
+    font-size: 25px;
+    vertical-align: 3px;
+    margin: 5px;
+}
+
+.browse-like {
+    font-size: 25px;
+    vertical-align: 4px;
+    margin: 5px;
+}
+
+.comment-like {
+    font-size: 25px;
+    vertical-align: 3px;
+    margin: 5px;
+}

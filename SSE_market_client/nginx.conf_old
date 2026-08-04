@@ -1,0 +1,39 @@
+worker_processes  1;
+events {
+  worker_connections  1024;
+}
+http {
+  include       mime.types;
+  default_type  application/octet-stream;
+  sendfile        on;
+  keepalive_timeout  65;
+  server {
+      listen       881 ssl;
+      error_page 497 https://$host:881$request_uri;
+      listen 80;
+      server_name  cilent;
+       if ($host = 114.132.75.27)
+        {
+          return 301 https://ssemarket.cn:881$request_uri;
+         }
+      # 证书文件
+      ssl_certificate /etc/letsencrypt/1_ssemarket.cn_bundle.crt;
+      # 私钥文件
+      ssl_certificate_key /etc/letsencrypt/2_ssemarket.cn.key;
+      ssl_session_timeout 5m;
+      # 配置协议
+      ssl_protocols TLSv1.2 TLSv1.3;
+      #请按照以下套件配置，配置加密套件，写法遵循 openssl 标准。
+      ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:HIGH:!aNULL:!MD5:!RC4:!DHE; 
+      ssl_prefer_server_ciphers on;
+      location / {
+          root   /usr/share/nginx/html;
+          try_files $uri $uri/ /index.html last; # 别忘了这个哈
+          index  index.html index.htm;
+      }
+      error_page   500 502 503 504  /50x.html;
+      location = /50x.html {
+          root   html;
+      }
+  }
+}
