@@ -12,6 +12,11 @@ services:
       - MYSQL_DATABASE=ssemarket
     volumes:
       - my-vol:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-padmin"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   redis:
     image: redis:latest
@@ -19,14 +24,21 @@ services:
     command: redis-server --appendonly yes
     environment:
       - TZ=Asia/Shanghai
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   sse_market_server:
     image: sse_market_server:latest
     container_name: zgie_market_server
     restart: on-failure:3
     depends_on:
-      - redis
-      - mysql
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     build: .
     ports:
       - 8080:8080
