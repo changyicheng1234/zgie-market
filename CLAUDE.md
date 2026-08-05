@@ -35,17 +35,17 @@
 - [x] 创建 `SSE_market_server/.env`（SMTP邮件模板已创建）
 - [x] 修改 `config/emailConst.go` 品牌文字（"软工集市" → "智工集市" 全部替换完成）
 - [x] TMS 密钥移入 application.yml 统一管理（原本硬编码）
-- [ ] **填入真实密钥**：`application.yml` 中所有 TODO 项（COS/TMS/JWT/数据库密码）
-- [ ] **填入邮箱信息**：`.env` 中所有 TODO 项（SMTP账号/授权码）
+- [x] **填入真实密钥**：`application.yml` 配置完成（COS/TMS/JWT/数据库）
+- [x] **填入邮箱信息**：`.env` 配置完成（SYSU SMTP）
 
 > ⚠️ 注意：`config/emailConst.go` 邮件模板中 logo 图片 URL 仍指向 `ssemarket.cn`，
 > 等有自己的域名和 logo 后替换（搜索 `ssemarket.cn/new/android-chrome-192x192.png`）
 
 ### 阶段二：第三方服务开通（照搬软工集市方案）
-- [ ] 腾讯云账号注册/登录：https://console.cloud.tencent.com
-- [ ] 开通 COS 存储桶，获取 BucketName / AppId / SecretId / SecretKey
-- [ ] 开通 TMS 文本内容安全，获取密钥（可复用 COS 同一子账号）
-- [ ] 准备 SMTP 邮箱（QQ邮箱推荐），开启授权码
+- [x] 腾讯云子账号创建（zngc-cyc，AppId: 1463399285）
+- [x] COS 存储桶：zngclt-1463399285（广州区，私有读写）
+- [x] TMS 文本内容安全已开通
+- [x] SMTP：中山大学官方邮箱 mail.sysu.edu.cn:465
 
 ### 阶段三：本地开发环境验证
 - [ ] 安装 Go 1.23+
@@ -55,31 +55,101 @@
 - [ ] 验证注册/登录/发帖流程
 
 ### 阶段四：服务器部署
-- [ ] 获取服务器（学院提供 or 云服务器，最低 2核4G，能跑 Docker）
-- [ ] 安装 Docker + Docker Compose
-- [ ] 修改 `compose.yml` 中 `/root/SSE_Market/` 路径为服务器实际路径
-- [ ] 配置 Nginx + HTTPS（Let's Encrypt，原项目已有 certbot 续期脚本）
-- [ ] 申请学院子域名 or 独立域名
-- [ ] 首次部署，验证线上运行
+- [x] 获取服务器（腾讯云 203.195.162.102）
+- [x] 安装 Docker + Docker Compose
+- [x] 修改 `compose.yml` 路径为 `/home/ubuntu/zgie-market/`
+- [x] 安装 Nginx，配置静态文件服务 + `/api/` 反向代理
+- [x] 首次部署，验证线上运行（PC: /pc/，移动: /mb/，API: /api/）
+- [x] 域名：ise-market.duckdns.org（免费，DuckDNS）
+- [x] 配置 HTTPS（acme.sh + DuckDNS DNS验证，证书已安装，自动续期每天3点）
 
 ---
 
-## 人B — 前端 + 移动端任务清单
+## 人B — 前端 + 移动端
 
-### 阶段一：品牌替换
+### 任务清单
+
+#### 品牌替换（主要工作）
 - [ ] PC端：`src/views/layout/NavbarView.vue` — 导航栏名称
 - [ ] PC端：`src/views/login/LoginView.vue` — 登录页标题
 - [ ] PC端：`src/utils/mouseClick.js` — 点击特效文字
 - [ ] 移动端：全局搜索"软工"替换为"智工"
-- [ ] 替换 logo、favicon、banner 图
+- [ ] 替换 logo、favicon、banner 图（替换 `public/` 目录下的图片文件）
 
-### 阶段二：环境配置
-- [ ] PC端：修改 `.env.production` 的 `VUE_APP_BASE_URL` 为服务器后端地址
-- [ ] 移动端：同上
+#### 已完成（人A代劳）
+- [x] `.env.production` 配置好了（API 地址指向服务器）
+- [x] `.env.development` 配置好了（本地开发 API 指向线上服务器）
+- [x] 首次 build + 上传服务器完成
 
-### 阶段三：构建 & 部署
-- [ ] `yarn build` 打包
-- [ ] 将 dist/ 上传到服务器（Nginx 已配置静态路径）
+---
+
+### 人B 本地开发教程
+
+> 目标：在自己电脑上改代码，立刻能看到效果，不依赖人A。
+
+#### 第一步：拉代码
+
+```bash
+git clone https://github.com/[仓库地址]
+```
+
+#### 第二步：安装依赖
+
+PC端：
+```bash
+cd SSE_market_client
+npm install --legacy-peer-deps
+```
+
+移动端：
+```bash
+cd sse_market_mobile
+yarn install --ignore-engines
+```
+
+> Node.js 版本要求：推荐 v18 或 v20（v24 有兼容性警告但能用）
+
+#### 第三步：本地启动
+
+PC端（访问 http://localhost:8080）：
+```bash
+cd SSE_market_client
+npm run serve
+```
+
+移动端（访问 http://localhost:8081）：
+```bash
+cd sse_market_mobile
+yarn serve
+```
+
+浏览器会自动打开。API 请求会自动转发到线上服务器 `https://ise-market.duckdns.org`，**登录/注册/发帖都能正常用**，不需要本地搭后端。
+
+#### 第四步：改完提交
+
+```bash
+git add .
+git commit -m "修改导航栏品牌名为智工集市"
+git push
+```
+
+push 后告知人A，人A 执行一条命令重新 build 并部署到服务器。
+
+---
+
+### 人A 收到人B改动后的部署命令
+
+```bash
+# PC端
+cd "D:/zstudy/研一/学院集市/SSE_market_client"
+git pull && npx vue-cli-service build
+scp -i ~/.ssh/zgie_server -r dist/. ubuntu@203.195.162.102:/home/ubuntu/zgie-market/frontend/pc/
+
+# 移动端
+cd "D:/zstudy/研一/学院集市/sse_market_mobile"
+git pull && yarn build --ignore-engines
+scp -i ~/.ssh/zgie_server -r dist/. ubuntu@203.195.162.102:/home/ubuntu/zgie-market/frontend/mb/
+```
 
 ---
 
@@ -106,3 +176,4 @@
 
 - 2026-08-04：项目启动，克隆三个原始仓库，完成技术栈调研
 - 2026-08-04：确定方案（腾讯云全家桶 + CDKey注册），创建配置文件模板，完成品牌文字替换
+- 2026-08-05：后端 Docker Compose 部署完成，前端构建并上传，Nginx + HTTPS 配置完成。正式访问地址：https://ise-market.duckdns.org/pc/（PC端）、/mb/（移动端）

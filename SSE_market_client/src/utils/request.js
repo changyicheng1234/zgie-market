@@ -4,8 +4,7 @@ import storageService from '@/service/storageService';
 import store from '@/store';
 
 const service = axios.create({
-  // baseURL: process.env.VUE_APP_BASE_URL,
-  baseURL: 'https://ssemarket.cn/api/',
+  baseURL: process.env.VUE_APP_BASE_URL || 'https://ssemarket.cn/api/',
   timeout: 100000,
 });
 

@@ -231,9 +231,9 @@ export default {
           this.$router.push({ name: 'login' });
         });
       }).catch((err) => {
-        // 这里写从后端返回数据失败后的操作
-        this.$bvToast.toast(err.response.data.msg, {
-          title: '数据验证错误',
+        const msg = err.response ? err.response.data.msg : '网络错误，请检查连接后重试';
+        this.$bvToast.toast(msg, {
+          title: '注册失败',
           variant: 'danger',
           solid: true,
         });
