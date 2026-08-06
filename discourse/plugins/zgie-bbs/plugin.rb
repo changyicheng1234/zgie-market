@@ -15,4 +15,7 @@ module ::ZgieBbs
   PLUGIN_NAME = "zgie-bbs"
 end
 
-after_initialize { require_relative "lib/zgie_bbs/site_configurator" }
+after_initialize do
+  require_relative "lib/zgie_bbs/demo_seeder"
+  require_relative "lib/zgie_bbs/site_configurator"
+end

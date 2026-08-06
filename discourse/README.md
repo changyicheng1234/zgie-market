@@ -23,6 +23,7 @@ cp .env.example .env
 ```bash
 ./bin/dev status
 ./bin/dev configure
+./bin/dev seed
 ./bin/dev test
 ./bin/dev shell
 ./bin/dev logs
@@ -30,6 +31,23 @@ cp .env.example .env
 ```
 
 `stop` 会保留已安装在开发容器内的 Ruby gems；再次执行 `up` 即可继续。`down` 会删除容器（但保留数据库和 Node.js 卷），下次需要重新执行 `bootstrap` 补齐 gems。
+
+## 演示账号与渲染数据
+
+开发站可用一个幂等任务创建演示账号与内容：
+
+```bash
+./bin/dev seed
+```
+
+默认登录信息：
+
+- 邮箱：`demo@example.com`
+- 密码：`VioletRiver!8246-Campus`
+
+任务会创建 10 个分布在现有分类中的演示主题。其中 `[演示] 富文本与回复层级综合测试` 包含标题、粗体、斜体、删除线、引用、列表、代码块、表格、链接、图片与 Emoji，并带有 10 条回复；4 条回复通过 Discourse 原生 `reply_to_post_number` 指向其他回复。再次运行只会确认账号密码，不会重复创建主题或回复。
+
+这些凭据只用于本机开发；任务默认拒绝在生产环境运行。如确需在临时生产模式环境中生成，必须显式设置 `ZGIE_ALLOW_DEMO_SEED=true`。
 
 本机首次拉取大镜像若因网络出现 `unexpected EOF`，可启用 Podman 原生分层重试后再次执行 `bootstrap`：
 

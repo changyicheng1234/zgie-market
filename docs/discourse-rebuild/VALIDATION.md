@@ -25,8 +25,12 @@
 | 邀请码 | `require_invite_code=true`、`invite_only=false` |
 | 初始分类 | `daily`、`study`、`help`、`social`、`courses`、`other`，共 6 个 |
 | 幂等配置 | 第二次运行配置任务后仍为 6 个分类 |
+| 演示账号 | `demo@example.com`，已激活，密码登录有效 |
+| 演示内容 | 10 个主题；综合主题含 10 条回复 |
+| 回复关系 | 4 条回复使用原生 `reply_to_post_number` 指向其他回复 |
+| 富文本 cooked HTML | 标题、粗体、斜体、引用、代码块、表格、链接与图片均已生成 |
 | 上游 lint | Ruby、Prettier、Stylelint 全部通过 |
-| 插件测试 | 3 examples，0 failures |
+| 插件测试 | 5 examples，0 failures |
 
 ## 注册接口实测
 
@@ -37,11 +41,25 @@
 
 这证明当前方案直接复用了 Discourse 的账号、密码、邮件激活与邀请码注册链路，没有自行仿写鉴权 API。
 
+## 演示数据接口实测
+
+执行 `./bin/dev seed` 首次创建 10 个主题和 10 条回复；第二次执行显示 `0 topics and 0 replies created`，证明任务不会重复导入内容。
+
+通过真实 `/session.json` 使用 `demo@example.com` 和本地演示密码登录后：
+
+- `/session/current.json` 返回当前用户 `zgiedemo`。
+- `/latest.json` 返回全部 10 个 `[演示]` 主题。
+- `/t/topic/13.json` 返回 `[演示] 富文本与回复层级综合测试` 及 11 个楼层。
+- 二级回复关系为楼层 `4 → 2`、`6 → 3`、`8 → 5`、`10 → 7`。
+- 首帖 cooked HTML 中存在 `h1`、`strong`、`em`、`blockquote`、`pre`、`table`、`a` 和 `img` 元素。
+
 ## 开发站当前状态
 
 - 论坛：`http://localhost:4200`
 - 邮件预览：`http://localhost:8025`
 - 本地测试管理员：`admin@example.com`
+- 本地演示账号：`demo@example.com` / `VioletRiver!8246-Campus`
+- 富文本综合主题：`http://localhost:4200/t/topic/13`
 - 管理员设置密码的邮件已进入 Mailpit，没有发送到外部。
 
 `.env` 当前仍使用示例邀请码，只适合本机实验。共享或部署前必须替换 `ZGIE_INVITE_CODE`。

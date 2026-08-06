@@ -47,6 +47,13 @@ case "${1:-help}" in
   configure)
     compose exec -T discourse bash -lc "bin/rake zgie_bbs:configure"
     ;;
+  seed)
+    compose exec -T \
+      -e "ZGIE_DEMO_EMAIL=${ZGIE_DEMO_EMAIL:-demo@example.com}" \
+      -e "ZGIE_DEMO_USERNAME=${ZGIE_DEMO_USERNAME:-zgiedemo}" \
+      -e "ZGIE_DEMO_PASSWORD=${ZGIE_DEMO_PASSWORD:-VioletRiver!8246-Campus}" \
+      discourse bash -lc "bin/rake zgie_bbs:seed_demo"
+    ;;
   test)
     compose exec -T discourse bash -lc \
       "RAILS_ENV=test bin/rake db:create db:migrate >/dev/null && bin/rspec plugins/zgie-bbs/spec"
@@ -75,7 +82,8 @@ Commands:
   up          start the development container and its services
   bootstrap   install dependencies, migrate the DB, and configure the site
   server      run the Rails and Ember development servers
-  configure   reapply the idempotent智工 site configuration
+  configure   reapply the idempotent 智工 site configuration
+  seed        create or refresh the local demo login and rendering data
   test        run the zgie-bbs plugin specs
   shell       open a shell in the development container
   logs        follow container logs
