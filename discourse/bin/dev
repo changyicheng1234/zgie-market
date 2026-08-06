@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+project_dir="$(cd "${script_dir}/.." && pwd)"
+env_file="${project_dir}/.env"
+compose_file="${project_dir}/compose.dev.yml"
+
+if [[ ! -f "${env_file}" ]]; then
+  cp "${project_dir}/.env.example" "${env_file}"
+  printf 'Created %s from .env.example; change ZGIE_INVITE_CODE before sharing the site.\n' "${env_file}"
+fi
+
+set -a
+# shellcheck source=/dev/null
+source "${env_file}"
+set +a
+
+compose() {
+  docker compose --env-file "${env_file}" -f "${compose_file}" "$@"
+}
+
+ensure_source() {
+  DISCOURSE_UPSTREAM_BRANCH="${DISCOURSE_UPSTREAM_BRANCH:-main}" "${script_dir}/fetch-upstream"
+}
+
+case "${1:-help}" in
+  fetch)
+    ensure_source
+    ;;
+  up)
+    ensure_source
+    compose up -d
+    ;;
+  bootstrap)
+    ensure_source
+    compose up -d
+    compose exec -T discourse bash -lc "bundle check || bundle install"
+    compose exec -T discourse bash -lc "pnpm install --frozen-lockfile"
+    compose exec -T discourse bash -lc \
+      "SKIP_MULTISITE=1 SKIP_TEST_DATABASE=1 bin/rake db:create db:migrate"
+    compose exec -T discourse bash -lc "bin/rake zgie_bbs:configure"
+    ;;
+  server)
+    compose exec discourse bash -lc "UNICORN_BIND_ALL=1 bin/dev"
+    ;;
+  configure)
+    compose exec -T discourse bash -lc "bin/rake zgie_bbs:configure"
+    ;;
+  test)
+    compose exec -T discourse bash -lc \
+      "RAILS_ENV=test bin/rake db:create db:migrate >/dev/null && bin/rspec plugins/zgie-bbs/spec"
+    ;;
+  shell)
+    compose exec discourse bash
+    ;;
+  logs)
+    compose logs -f discourse
+    ;;
+  stop)
+    compose stop discourse
+    ;;
+  down)
+    compose down
+    ;;
+  status)
+    compose ps
+    ;;
+  *)
+    cat <<'USAGE'
+Usage: ./bin/dev COMMAND
+
+Commands:
+  fetch       shallow-clone upstream Discourse
+  up          start the development container and its services
+  bootstrap   install dependencies, migrate the DB, and configure the site
+  server      run the Rails and Ember development servers
+  configure   reapply the idempotent智工 site configuration
+  test        run the zgie-bbs plugin specs
+  shell       open a shell in the development container
+  logs        follow container logs
+  stop        stop the container while preserving its installed dependencies
+  status      show container status
+  down        remove the container but keep its database and Node.js volumes
+USAGE
+    ;;
+esac

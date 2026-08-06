@@ -12,6 +12,11 @@ sse_market_mobile/dist/
 SSE_market_server/*.exe
 SSE_market_server/loginTest
 
+# Discourse 实验环境
+discourse/.env
+discourse/.cache/
+discourse/tmp/
+
 # 系统文件
 .DS_Store
 *.DS_Store

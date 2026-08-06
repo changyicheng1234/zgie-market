@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+project_dir="$(cd "${script_dir}/.." && pwd)"
+target_dir="${project_dir}/.cache/discourse"
+branch="${DISCOURSE_UPSTREAM_BRANCH:-main}"
+
+if [[ -d "${target_dir}/.git" ]]; then
+  printf 'Discourse source already exists at %s\n' "${target_dir}"
+  git -c safe.directory="${target_dir}" -C "${target_dir}" rev-parse --short HEAD
+  exit 0
+fi
+
+mkdir -p "$(dirname "${target_dir}")"
+git clone \
+  --depth 1 \
+  --filter=blob:none \
+  --branch "${branch}" \
+  https://github.com/discourse/discourse.git \
+  "${target_dir}"
+
+git -c safe.directory="${target_dir}" -C "${target_dir}" rev-parse --short HEAD

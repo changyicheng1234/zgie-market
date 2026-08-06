@@ -1,0 +1,50 @@
+name: zgie-bbs-discourse
+
+services:
+  discourse:
+    image: ${DISCOURSE_DEV_IMAGE:-docker.io/discourse/discourse_dev:20260803-0122}
+    privileged: true
+    working_dir: /workspace/discourse
+    command:
+      - bash
+      - -lc
+      - |
+        set -euo pipefail
+        chown -R postgres:postgres /shared/postgres_data
+        ln -sf /workspace/discourse/.devcontainer/scripts/chrome_wrapper /usr/bin/google-chrome
+        nohup /sbin/boot >/tmp/discourse-services.log 2>&1 &
+        until runuser -u postgres -- pg_isready --quiet --username postgres; do
+          sleep 0.2
+        done
+        if ! runuser -u postgres -- psql --username postgres --dbname postgres --tuples-only --command "SELECT 1 FROM pg_roles WHERE rolname = 'root'" | grep -q 1; then
+          runuser -u postgres -- createuser --username postgres --superuser root
+        fi
+        mailpit --quiet --listen 0.0.0.0:8025 --smtp 0.0.0.0:1025 >/tmp/mailpit.log 2>&1 &
+        exec sleep infinity
+    environment:
+      # Rootless Podman maps container root to the host developer. A matching
+      # database role keeps local peer authentication passwordless and scoped.
+      PGUSER: root
+      DISCOURSE_DEV_ALLOW_ANON_TO_IMPERSONATE: "1"
+      ZGIE_SITE_TITLE: ${ZGIE_SITE_TITLE:-智工 BBS}
+      ZGIE_SITE_DESCRIPTION: ${ZGIE_SITE_DESCRIPTION:-智能工程学院师生的邀请制交流社区}
+      ZGIE_DEFAULT_LOCALE: ${ZGIE_DEFAULT_LOCALE:-zh_CN}
+      ZGIE_LOGIN_REQUIRED: ${ZGIE_LOGIN_REQUIRED:-true}
+      ZGIE_REGISTRATION_MODE: ${ZGIE_REGISTRATION_MODE:-global_code}
+      ZGIE_INVITE_CODE: ${ZGIE_INVITE_CODE:-}
+    ports:
+      - "${DISCOURSE_HTTP_PORT:-4200}:3000"
+      - "${DISCOURSE_MAIL_PORT:-8025}:8025"
+    volumes:
+      - ./.cache/discourse:/workspace/discourse:Z
+      - ./plugins/zgie-bbs:/workspace/discourse/plugins/zgie-bbs:Z
+      - discourse_node_modules:/workspace/discourse/node_modules
+      - discourse_postgres:/shared/postgres_data
+      - discourse_redis:/shared/redis
+    tty: true
+    stdin_open: true
+
+volumes:
+  discourse_node_modules:
+  discourse_postgres:
+  discourse_redis:

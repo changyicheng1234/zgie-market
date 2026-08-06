@@ -1,0 +1,44 @@
+# frozen_string_literal: true
+
+RSpec.describe ZgieBbs::SiteConfigurator do
+  let(:env) do
+    {
+      "ZGIE_SITE_TITLE" => "智工测试站",
+      "ZGIE_SITE_DESCRIPTION" => "测试描述",
+      "ZGIE_DEFAULT_LOCALE" => "zh_CN",
+      "ZGIE_LOGIN_REQUIRED" => "true",
+      "ZGIE_REGISTRATION_MODE" => "global_code",
+      "ZGIE_INVITE_CODE" => "test-code"
+    }
+  end
+
+  describe ".call" do
+    it "configures a private local-auth site with an invite code" do
+      described_class.call(env:, output: StringIO.new)
+
+      expect(SiteSetting.title).to eq("智工测试站")
+      expect(SiteSetting.login_required).to eq(true)
+      expect(SiteSetting.invite_only).to eq(false)
+      expect(SiteSetting.invite_code).to eq("test-code")
+      expect(Category.find_by(slug: "study")&.name).to eq("学习交流")
+    end
+
+    it "supports Discourse invite links without a global code" do
+      env["ZGIE_REGISTRATION_MODE"] = "invite_links"
+      env["ZGIE_INVITE_CODE"] = ""
+
+      described_class.call(env:, output: StringIO.new)
+
+      expect(SiteSetting.invite_only).to eq(true)
+      expect(SiteSetting.invite_code).to eq("")
+    end
+
+    it "rejects a blank global invite code" do
+      env["ZGIE_INVITE_CODE"] = ""
+
+      expect {
+        described_class.call(env:, output: StringIO.new)
+      }.to raise_error(ArgumentError, /cannot be blank/)
+    end
+  end
+end

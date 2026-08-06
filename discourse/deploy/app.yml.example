@@ -1,0 +1,58 @@
+## Based on discourse/discourse_docker samples/standalone.yml.
+## Copy to /var/discourse/containers/app.yml and replace every CHANGE_ME value.
+
+templates:
+  - "templates/postgres.template.yml"
+  - "templates/redis.template.yml"
+  - "templates/web.template.yml"
+  - "templates/web.ratelimited.template.yml"
+
+expose:
+  # TLS terminates at the existing host Nginx.
+  - "127.0.0.1:20080:80"
+
+params:
+  db_default_text_search_config: "pg_catalog.english"
+
+env:
+  LC_ALL: en_US.UTF-8
+  LANG: en_US.UTF-8
+  LANGUAGE: en_US.UTF-8
+  DISCOURSE_DEFAULT_LOCALE: zh_CN
+
+  DISCOURSE_HOSTNAME: "CHANGE_ME.example.com"
+  DISCOURSE_DEVELOPER_EMAILS: "CHANGE_ME@example.com"
+
+  DISCOURSE_SMTP_ADDRESS: "mail.sysu.edu.cn"
+  DISCOURSE_SMTP_PORT: 465
+  DISCOURSE_SMTP_FORCE_TLS: true
+  DISCOURSE_SMTP_USER_NAME: "CHANGE_ME@example.com"
+  DISCOURSE_SMTP_PASSWORD: "CHANGE_ME"
+  DISCOURSE_NOTIFICATION_EMAIL: "CHANGE_ME@example.com"
+
+  ZGIE_SITE_TITLE: "智工 BBS"
+  ZGIE_SITE_DESCRIPTION: "智能工程学院师生的邀请制交流社区"
+  ZGIE_DEFAULT_LOCALE: "zh_CN"
+  ZGIE_LOGIN_REQUIRED: "true"
+  ZGIE_REGISTRATION_MODE: "global_code"
+  ZGIE_INVITE_CODE: "CHANGE_ME"
+
+volumes:
+  - volume:
+      host: /var/discourse/shared/standalone
+      guest: /shared
+  - volume:
+      host: /var/discourse/shared/standalone/log/var-log
+      guest: /var/log
+
+hooks:
+  after_code:
+    - exec:
+        cd: $home/plugins
+        cmd:
+          - git clone https://github.com/discourse/docker_manager.git
+          - git clone --depth 1 --branch experiment/discourse-rebuild https://github.com/changyicheng1234/zgie-market.git /tmp/zgie-market
+          - cp -a /tmp/zgie-market/discourse/plugins/zgie-bbs $home/plugins/zgie-bbs
+
+run:
+  - exec: echo "ZGIE Discourse image build complete"
