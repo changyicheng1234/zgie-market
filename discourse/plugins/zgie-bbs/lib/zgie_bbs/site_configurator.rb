@@ -26,6 +26,7 @@ module ZgieBbs
     def call
       configure_identity
       configure_access
+      configure_discussions
       create_categories
       @output.puts "智工 BBS configuration applied."
     end
@@ -68,6 +69,14 @@ module ZgieBbs
       end
 
       @output.puts "Registration mode: #{mode}"
+    end
+
+    def configure_discussions
+      SiteSetting.nested_replies_enabled = true
+      SiteSetting.nested_replies_default = true
+      SiteSetting.nested_replies_max_depth = 1
+      SiteSetting.nested_replies_cap_nesting_depth = true
+      SiteSetting.nested_replies_default_sort = "old"
     end
 
     def create_categories

@@ -1,6 +1,6 @@
 # Discourse 重构验证记录
 
-验证日期：2026-08-06
+验证日期：2026-08-09
 
 ## 固定版本
 
@@ -27,10 +27,11 @@
 | 幂等配置 | 第二次运行配置任务后仍为 6 个分类 |
 | 演示账号 | `demo@example.com`，已激活，密码登录有效 |
 | 演示内容 | 10 个主题；综合主题含 10 条回复 |
-| 回复关系 | 4 条回复使用原生 `reply_to_post_number` 指向其他回复 |
+| 回复关系 | 5 条回复使用原生 `reply_to_post_number`；其中一条回复二级留言 |
+| 固定两层留言 | 原生 Nested Replies，全局启用、最大视觉深度 1、深度封顶 |
 | 富文本 cooked HTML | 标题、粗体、斜体、引用、代码块、表格、链接与图片均已生成 |
 | 上游 lint | Ruby、Prettier、Stylelint 全部通过 |
-| 插件测试 | 5 examples，0 failures |
+| 插件测试 | 10 examples，0 failures（含真实浏览器系统测试） |
 
 ## 注册接口实测
 
@@ -49,9 +50,13 @@
 
 - `/session/current.json` 返回当前用户 `zgiedemo`。
 - `/latest.json` 返回全部 10 个 `[演示]` 主题。
-- `/t/topic/13.json` 返回 `[演示] 富文本与回复层级综合测试` 及 11 个楼层。
-- 二级回复关系为楼层 `4 → 2`、`6 → 3`、`8 → 5`、`10 → 7`。
+- `/t/topic/13.json` 返回 `[演示] 富文本与回复层级综合测试`、`posts_count=11` 和 `is_nested_view=true`。
+- 回复关系为楼层 `4 → 2`、`6 → 3`、`8 → 5`、`10 → 7`、`11 → 4`。
+- `/n/topic/13.json?sort=old` 的根留言仅为楼层 `2`、`3`、`5`、`7`、`9`，二级回复不会进入根留言流。
+- `/n/topic/13/children/2.json?depth=1&sort=old` 将楼层 `4` 与 `11` 作为同级项返回；楼层 `11` 仍保留 `reply_to_post_number=4` 和回复目标 `zgiepeer`。
 - 首帖 cooked HTML 中存在 `h1`、`strong`、`em`、`blockquote`、`pre`、`table`、`a` 和 `img` 元素。
+
+浏览器系统测试实际执行了以下流程：登录用户进入嵌套主题，点击二级留言“乙”的回复按钮，由“甲”提交回复。页面最终在视觉深度 1 找到新内容，并确认视觉深度 0 不存在该内容。
 
 ## 开发站当前状态
 

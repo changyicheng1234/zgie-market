@@ -23,6 +23,20 @@ RSpec.describe ZgieBbs::SiteConfigurator do
       expect(Category.find_by(slug: "study")&.name).to eq("学习交流")
     end
 
+    it "enforces one visual level of nested replies" do
+      described_class.call(env:, output: StringIO.new)
+
+      expect(
+        [
+          SiteSetting.nested_replies_enabled,
+          SiteSetting.nested_replies_default,
+          SiteSetting.nested_replies_max_depth,
+          SiteSetting.nested_replies_cap_nesting_depth,
+          SiteSetting.nested_replies_default_sort
+        ]
+      ).to eq([true, true, 1, true, "old"])
+    end
+
     it "supports Discourse invite links without a global code" do
       env["ZGIE_REGISTRATION_MODE"] = "invite_links"
       env["ZGIE_INVITE_CODE"] = ""

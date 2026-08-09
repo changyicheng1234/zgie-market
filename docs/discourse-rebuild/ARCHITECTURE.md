@@ -23,6 +23,7 @@ Discourse (Ember + Rails)
 - 避免维护 Rails、Ember 与序列化协议的长期 fork。
 - 品牌和样式放在插件资产中。
 - 一次性站点设置和分类放在幂等配置任务中。
+- 固定两层评论直接使用 Discourse 原生 Nested Replies，通过站点设置限制视觉深度。
 - 如果未来确实需要独有业务，再以独立 Discourse 插件扩展。
 
 ## 注册模式
@@ -47,3 +48,5 @@ Partition -> Category
 Psave    -> Bookmark
 Plike    -> PostAction(like)
 ```
+
+`reply_to_post_number` 始终保留真实回复目标。站点将嵌套回复最大视觉深度设为 1，并开启深度封顶；因此回复二级留言时，数据、通知和“回复给谁”仍指向该二级留言，但主题页面把它压平为同一一级留言下的兄弟项。插件不新增评论表，也不接管 Discourse 的帖子 API。

@@ -5,7 +5,10 @@ RSpec.describe ZgieBbs::DemoSeeder do
     {
       "ZGIE_DEMO_EMAIL" => "demo-seeder@example.com",
       "ZGIE_DEMO_USERNAME" => "demo_seeder",
-      "ZGIE_DEMO_PASSWORD" => "RSpec-VioletRiver!8246"
+      "ZGIE_DEMO_PASSWORD" => "RSpec-VioletRiver!8246",
+      "ZGIE_DEMO_PEER_EMAIL" => "demo-peer-seeder@example.com",
+      "ZGIE_DEMO_PEER_USERNAME" => "demo_peer_seeder",
+      "ZGIE_DEMO_PEER_PASSWORD" => "RSpec-CedarBridge!3902"
     }
   end
 
@@ -32,6 +35,7 @@ RSpec.describe ZgieBbs::DemoSeeder do
         end
 
       expect(result.user).to be_active
+      expect(result.peer_user).to be_active
       expect(
         result.user.confirm_password?(env.fetch("ZGIE_DEMO_PASSWORD"))
       ).to eq(true)
@@ -39,8 +43,29 @@ RSpec.describe ZgieBbs::DemoSeeder do
         *described_class::TOPICS.map { |topic| topic.fetch(:title) }
       )
       expect(replies.count).to eq(10)
-      expect(replies.filter_map(&:reply_to_post_number)).to eq([2, 3, 5, 7])
       expect(rendered_elements).to all(be_present)
+    end
+
+    it "creates a reply-to-child chain with two distinct authors" do
+      result = described_class.call(env:, output: StringIO.new)
+      replies =
+        described_class::REPLIES.to_h do |attributes|
+          field =
+            PostCustomField.find_by(
+              name: described_class::REPLY_KEY_FIELD,
+              value: attributes.fetch(:key)
+            )
+          [attributes.fetch(:key), Post.find(field.post_id)]
+        end
+      root = replies.fetch("reply-01")
+      child = replies.fetch("reply-03")
+      reply_to_child = replies.fetch("reply-10")
+
+      expect(child.reply_to_post_number).to eq(root.post_number)
+      expect(child.user).to eq(result.peer_user)
+      expect(reply_to_child.reply_to_post_number).to eq(child.post_number)
+      expect(reply_to_child.reply_to_user_id).to eq(result.peer_user.id)
+      expect(reply_to_child.user).to eq(result.user)
     end
 
     it "does not duplicate users, topics, or posts when rerun" do

@@ -52,6 +52,9 @@ case "${1:-help}" in
       -e "ZGIE_DEMO_EMAIL=${ZGIE_DEMO_EMAIL:-demo@example.com}" \
       -e "ZGIE_DEMO_USERNAME=${ZGIE_DEMO_USERNAME:-zgiedemo}" \
       -e "ZGIE_DEMO_PASSWORD=${ZGIE_DEMO_PASSWORD:-VioletRiver!8246-Campus}" \
+      -e "ZGIE_DEMO_PEER_EMAIL=${ZGIE_DEMO_PEER_EMAIL:-demo-peer@example.com}" \
+      -e "ZGIE_DEMO_PEER_USERNAME=${ZGIE_DEMO_PEER_USERNAME:-zgiepeer}" \
+      -e "ZGIE_DEMO_PEER_PASSWORD=${ZGIE_DEMO_PEER_PASSWORD:-CedarBridge!3902-Peer}" \
       discourse bash -lc "bin/rake zgie_bbs:seed_demo"
     ;;
   test)

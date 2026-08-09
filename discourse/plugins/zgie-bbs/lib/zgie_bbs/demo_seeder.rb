@@ -2,13 +2,23 @@
 
 module ZgieBbs
   class DemoSeeder
-    Result = Struct.new(:user, :topics, :showcase_topic, keyword_init: true)
+    Result =
+      Struct.new(
+        :user,
+        :peer_user,
+        :topics,
+        :showcase_topic,
+        keyword_init: true
+      )
 
     TOPIC_KEY_FIELD = "zgie_bbs_demo_topic_key"
     REPLY_KEY_FIELD = "zgie_bbs_demo_reply_key"
     DEFAULT_EMAIL = "demo@example.com"
     DEFAULT_USERNAME = "zgiedemo"
     DEFAULT_PASSWORD = "VioletRiver!8246-Campus"
+    DEFAULT_PEER_EMAIL = "demo-peer@example.com"
+    DEFAULT_PEER_USERNAME = "zgiepeer"
+    DEFAULT_PEER_PASSWORD = "CedarBridge!3902-Peer"
 
     TOPICS = [
       {
@@ -109,18 +119,23 @@ module ZgieBbs
     ].freeze
 
     REPLIES = [
-      { key: "reply-01", raw: "第一条普通回复：主题列表、正文和回复流都已经能够正常展示。" },
-      { key: "reply-02", raw: <<~'MARKDOWN' },
+      {
+        key: "reply-01",
+        author: :primary,
+        raw: "甲的一级留言：下面的回复只会出现在这一条留言下，不会追加到主题末尾。"
+      },
+      { key: "reply-02", author: :primary, raw: <<~'MARKDOWN' },
           > 这是回复中的引用块。
 
           引用后继续写正文，并补充 **加粗结论** 与 *斜体提示*。
         MARKDOWN
       {
         key: "reply-03",
+        author: :peer,
         parent_key: "reply-01",
-        raw: "这是对第一条回复的二级回复，借此检查 `reply_to_post_number` 关系。"
+        raw: "乙回复甲：这是第一条楼中楼回复，用于检查 `reply_to_post_number` 关系。"
       },
-      { key: "reply-04", raw: <<~'MARKDOWN' },
+      { key: "reply-04", author: :primary, raw: <<~'MARKDOWN' },
           回复也可以包含代码块：
 
           ```javascript
@@ -130,10 +145,11 @@ module ZgieBbs
         MARKDOWN
       {
         key: "reply-05",
+        author: :peer,
         parent_key: "reply-02",
         raw: "这是对第二条回复的二级回复，并附上[中山大学官网](https://www.sysu.edu.cn/)链接。"
       },
-      { key: "reply-06", raw: <<~'MARKDOWN' },
+      { key: "reply-06", author: :primary, raw: <<~'MARKDOWN' },
           回复中的表格测试：
 
           | 功能 | 状态 |
@@ -143,19 +159,27 @@ module ZgieBbs
         MARKDOWN
       {
         key: "reply-07",
+        author: :peer,
         parent_key: "reply-04",
         raw: "这是对代码块回复的二级回复，用于验证点击“回复”后能定位到对应楼层。"
       },
       {
         key: "reply-08",
+        author: :peer,
         raw: "回复中的本地图片：![Discourse 示例图标](/images/discourse-logo-sketch.png)"
       },
       {
         key: "reply-09",
+        author: :peer,
         parent_key: "reply-06",
         raw: "这是对表格回复的二级回复：列表、表格与楼层关系可以同时存在。"
       },
-      { key: "reply-10", raw: "第十条回复完成 :tada: —— Emoji、中文标点和回复总数一起测试。" }
+      {
+        key: "reply-10",
+        author: :primary,
+        parent_key: "reply-03",
+        raw: "甲回复乙：虽然这条回复实际指向乙，但视觉上仍与乙同级，只显示在甲的一级留言下。 :tada:"
+      }
     ].freeze
 
     def self.call(env: ENV, output: $stdout)
@@ -167,21 +191,37 @@ module ZgieBbs
       @output = output
       @created_topics = 0
       @created_replies = 0
+      @updated_replies = 0
     end
 
     def call
       prevent_production_seed!
 
-      user = ensure_user
+      user =
+        ensure_user(
+          email: email,
+          username: username,
+          password: password,
+          name: "智工演示用户"
+        )
+      peer_user =
+        ensure_user(
+          email: peer_email,
+          username: peer_username,
+          password: peer_password,
+          name: "智工同学乙"
+        )
       topics = TOPICS.map { |attributes| ensure_topic(user, attributes) }
       showcase_topic = topics.first
-      ensure_replies(user, showcase_topic)
+      ensure_replies({ primary: user, peer: peer_user }, showcase_topic)
 
       @output.puts "Demo login: #{user.email} / #{password}"
-      @output.puts "Demo data: #{@created_topics} topics and #{@created_replies} replies created."
+      @output.puts "Demo peer: #{peer_user.username}"
+      @output.puts "Demo data: #{@created_topics} topics and #{@created_replies} replies created; " \
+                     "#{@updated_replies} replies refreshed."
       @output.puts "Showcase topic: #{showcase_topic.relative_url}"
 
-      Result.new(user:, topics:, showcase_topic:)
+      Result.new(user:, peer_user:, topics:, showcase_topic:)
     end
 
     private
@@ -193,9 +233,9 @@ module ZgieBbs
       raise "Refusing to create demo credentials in production without ZGIE_ALLOW_DEMO_SEED=true"
     end
 
-    def ensure_user
+    def ensure_user(email:, username:, password:, name:)
       user = User.find_by_email(email)
-      user ||= User.new(email:, username:, name: "智工演示用户")
+      user ||= User.new(email:, username:, name:)
       user.password = password unless user.persisted? &&
         user.confirm_password?(password)
       user.approved = true
@@ -233,26 +273,71 @@ module ZgieBbs
       first_post.topic
     end
 
-    def ensure_replies(user, topic)
+    def ensure_replies(authors, topic)
       posts_by_key = {}
 
       REPLIES.each do |attributes|
         key = attributes.fetch(:key)
         post = post_by_key(key)
+        author = authors.fetch(attributes.fetch(:author))
+        parent = posts_by_key.fetch(attributes[:parent_key]) if attributes[
+          :parent_key
+        ]
 
         if post && post.topic_id != topic.id
           raise "Demo reply #{key} belongs to another topic"
         end
 
-        unless post
-          parent = posts_by_key.fetch(attributes[:parent_key]) if attributes[
-            :parent_key
-          ]
-          post = create_reply(user, topic, attributes, parent)
-        end
+        post = create_reply(author, topic, attributes, parent) unless post
+        reconcile_reply(post, author, attributes, parent)
 
         posts_by_key[key] = post
       end
+    end
+
+    def reconcile_reply(post, author, attributes, parent)
+      updated = false
+      changes = {}
+      raw = attributes.fetch(:raw)
+      reply_to_post_number = parent&.post_number
+
+      changes[:raw] = raw if post.raw.strip != raw.strip
+      if post.reply_to_post_number != reply_to_post_number
+        changes[:reply_to_post_number] = reply_to_post_number
+      end
+
+      if changes.present?
+        revised =
+          post.revise(
+            Discourse.system_user,
+            changes,
+            bypass_bump: true,
+            silent: true,
+            skip_revision: true,
+            skip_validations: true
+          )
+        if !revised && post.errors.present?
+          raise "Could not refresh demo reply #{attributes.fetch(:key)}: " \
+                  "#{post.errors.full_messages.join(", ")}"
+        end
+
+        updated = true if revised
+      end
+
+      if post.user_id != author.id
+        PostOwnerChanger.new(
+          post_ids: [post.id],
+          topic_id: post.topic_id,
+          new_owner: author,
+          acting_user: Discourse.system_user,
+          skip_revision: true
+        ).change_owner!
+        updated = true
+      end
+
+      @updated_replies += 1 if updated
+      post.reload if updated
+      post
     end
 
     def create_reply(user, topic, attributes, parent)
@@ -292,6 +377,20 @@ module ZgieBbs
 
     def password
       @password ||= fetch("ZGIE_DEMO_PASSWORD", DEFAULT_PASSWORD)
+    end
+
+    def peer_email
+      @peer_email ||=
+        fetch("ZGIE_DEMO_PEER_EMAIL", DEFAULT_PEER_EMAIL).strip.downcase
+    end
+
+    def peer_username
+      @peer_username ||=
+        fetch("ZGIE_DEMO_PEER_USERNAME", DEFAULT_PEER_USERNAME).strip
+    end
+
+    def peer_password
+      @peer_password ||= fetch("ZGIE_DEMO_PEER_PASSWORD", DEFAULT_PEER_PASSWORD)
     end
 
     def fetch(name, default)
