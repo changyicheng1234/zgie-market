@@ -42,6 +42,17 @@ RSpec.describe ZgieBbs::SiteConfigurator do
       ).to eq([true, true, 1, true, "old"])
     end
 
+    it "allows every signed-in member to post and react anonymously" do
+      described_class.call(env:, output: StringIO.new)
+
+      expect(SiteSetting.allow_anonymous_mode).to eq(true)
+      expect(SiteSetting.allow_likes_in_anonymous_mode).to eq(true)
+      expect(
+        SiteSetting.anonymous_posting_allowed_groups_map
+      ).to contain_exactly(Group::AUTO_GROUPS[:trust_level_0])
+      expect(SiteSetting.discourse_reactions_enabled).to eq(true)
+    end
+
     it "supports Discourse invite links without a global code" do
       env["ZGIE_REGISTRATION_MODE"] = "invite_links"
       env["ZGIE_INVITE_CODE"] = ""

@@ -81,4 +81,61 @@ RSpec.describe "Fixed nested replies" do
 
     expect(reply_tree).to have_reply_at_depth("二级留言内容", depth: 1)
   end
+
+  it "renders anonymous authors without profile links and shows topic position" do
+    anonymous_user = AnonymousShadowCreator.get(peer_user)
+    anonymous_reply =
+      Fabricate(
+        :post,
+        topic:,
+        user: anonymous_user,
+        raw: "这是一条不会暴露用户资料入口的匿名留言",
+        reply_to_post_number: op.post_number
+      )
+    6.times do |index|
+      Fabricate(
+        :post,
+        topic:,
+        user: primary_user,
+        raw: "用于验证滚动楼层定位的后续留言 #{index + 1}",
+        reply_to_post_number: op.post_number
+      )
+    end
+
+    resize_window(height: 700) do
+      nested_view.visit_nested(topic)
+
+      expect(reply_tree).to have_noninteractive_anonymous_identity(
+        anonymous_reply
+      )
+      expect(
+        page.evaluate_script(
+          'getComputedStyle(document.querySelector(".zgie-topic-position")).position'
+        )
+      ).to eq("fixed")
+      expect(reply_tree).to have_topic_position_to_right_of_content
+      reply_tree.scroll_post_to_reading_line(anonymous_reply)
+      expect(reply_tree).to have_topic_position(
+        current: anonymous_reply.post_number,
+        total: topic.reload.highest_post_number
+      )
+    end
+  end
+
+  it "keeps reaction emoji and counts visible without opening actor lists" do
+    DiscourseReactions::ReactionManager.new(
+      reaction_value: "heart",
+      user: peer_user,
+      post: root_reply
+    ).toggle!
+
+    nested_view.visit_nested(topic)
+
+    expect(reply_tree).to have_read_only_reaction_summary(
+      root_reply,
+      reaction: "heart"
+    )
+    reply_tree.force_click_reaction_summary(root_reply)
+    expect(reply_tree).to have_no_reaction_actor_popup
+  end
 end

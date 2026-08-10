@@ -1,4 +1,6 @@
 zh_CN:
   js:
     zgie_bbs:
+      anonymous_author: "匿名用户"
       nested_reply_to: "回复 %{username}"
+      topic_position: "当前为第 %{current} 条，共 %{total} 条帖子"

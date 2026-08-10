@@ -35,6 +35,14 @@ Discourse (Ember + Rails)
 
 两种模式不同时启用。旧系统“多个 9 位、单次使用、手工输入的 CDKey”不是 Discourse 核心能力；若最终必须逐码核销，再新增一个很小的注册插件。
 
+## 匿名与互动隐私
+
+匿名发布直接复用 Discourse 的 `AnonymousShadowCreator`：真实账号负责登录和资格校验，进入匿名模式后由关联的影子账号创建 Topic/Post。普通成员不能访问影子账号资料，页面也不会为匿名头像和用户名生成资料入口；管理员仍可追溯真实账号，满足社区治理需要。插件不新增匿名帖子表，也不把真实身份写入前端序列化结果。
+
+点赞和反应仍使用 Discourse 的 PostAction 与 discourse-reactions 数据模型。插件只改变公开读取边界：页面保留 Emoji 和汇总计数，普通成员不能调用参与者名单接口，管理员保留审计读取权限。
+
+右侧楼层进度是纯前端只读视图，数字来源于 Discourse 已有的 `post_number`、`posts_count` 和 `highest_post_number`，不创建另一套楼层编号或滚动状态。
+
 ## 与旧系统的关系
 
 旧 Vue/Go/MySQL 代码不参与新站运行。若存在需要保留的数据，MySQL 仅作为一次性迁移源：

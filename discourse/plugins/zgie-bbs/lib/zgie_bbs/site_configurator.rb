@@ -85,6 +85,11 @@ module ZgieBbs
     end
 
     def configure_discussions
+      SiteSetting.allow_anonymous_mode = true
+      SiteSetting.allow_likes_in_anonymous_mode = true
+      SiteSetting.anonymous_posting_allowed_groups =
+        Group::AUTO_GROUPS[:trust_level_0].to_s
+      SiteSetting.discourse_reactions_enabled = true
       SiteSetting.nested_replies_enabled = true
       SiteSetting.nested_replies_default = true
       SiteSetting.nested_replies_max_depth = 1

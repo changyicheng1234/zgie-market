@@ -1,4 +1,6 @@
 en:
   js:
     zgie_bbs:
+      anonymous_author: "Anonymous user"
       nested_reply_to: "Reply to %{username}"
+      topic_position: "Post %{current} of %{total}"

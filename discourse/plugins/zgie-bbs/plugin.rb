@@ -73,13 +73,26 @@ end
 
 after_initialize do
   require_relative "lib/zgie_bbs/demo_seeder"
+  require_relative "lib/zgie_bbs/privacy"
   require_relative "lib/zgie_bbs/site_configurator"
 
   reloadable_patch do
+    Guardian.prepend(ZgieBbs::AnonymousProfileGuardianExtension)
+    PostActionUsersController.prepend(
+      ZgieBbs::HiddenLikeActorsControllerExtension
+    )
     Post.prepend(ZgieBbs::PostReplyTargetExtension)
     NestedReplies::PostPreloader.prepend(
       ZgieBbs::NestedReplyTargetPreloaderExtension
     )
+
+    reaction_controller =
+      "DiscourseReactions::CustomReactionsController".safe_constantize
+    if reaction_controller
+      reaction_controller.prepend(
+        ZgieBbs::HiddenReactionActorsControllerExtension
+      )
+    end
   end
 
   add_to_serializer(
@@ -87,4 +100,10 @@ after_initialize do
     :zgie_replies_to_nested_reply,
     include_condition: -> { topic&.nested_view? }
   ) { object.zgie_replies_to_nested_reply? }
+
+  add_to_serializer(
+    :post,
+    :zgie_anonymous_author,
+    include_condition: -> { SiteSetting.allow_anonymous_mode }
+  ) { object.user&.anonymous? || false }
 end
