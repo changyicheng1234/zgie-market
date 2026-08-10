@@ -3,8 +3,8 @@
   box-shadow: 0 0.125rem 0.625rem rgb(var(--primary-rgb), 0.08);
 }
 
-// A root reply owns the whole thread card. Its stronger surface and accent
-// keep it visually distinct from the compact replies nested beneath it.
+// A root reply owns the whole thread card. Its primary article and nested
+// reply rail occupy separate visual regions so their surfaces never overlap.
 .nested-view__roots > .nested-post.--depth-0 {
   --nested-avatar-size: 36px;
   margin-block: var(--space-4);
@@ -34,9 +34,11 @@
   }
 
   > .nested-post__main > .nested-post__article {
+    box-sizing: border-box;
     padding: var(--space-3) var(--space-4);
     background: var(--primary-very-low);
-    border-inline-start: 0.1875rem solid var(--tertiary);
+    border: 1px solid var(--primary-low);
+    border-block-start: 0.1875rem solid var(--tertiary);
     border-radius: var(--d-border-radius);
 
     .nested-post__header .names .first {
@@ -51,7 +53,10 @@
   }
 
   > .nested-post__main > .nested-post-children {
-    margin-block-start: var(--space-2);
+    box-sizing: border-box;
+    margin-block-start: var(--space-4);
+    padding-block-start: var(--space-3);
+    border-block-start: 1px solid var(--primary-low);
 
     > .nested-post > .nested-post__parent-line-btn {
       display: none;
@@ -106,6 +111,11 @@
 
     > .nested-post__main > .nested-post__article {
       padding: var(--space-2) var(--space-3);
+    }
+
+    > .nested-post__main > .nested-post-children {
+      margin-block-start: var(--space-3);
+      padding-block-start: var(--space-2);
     }
   }
 }

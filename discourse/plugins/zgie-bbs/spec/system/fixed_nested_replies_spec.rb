@@ -59,6 +59,7 @@ RSpec.describe "Fixed nested replies" do
       from: peer_user.username,
       to: primary_user.username
     )
+    expect(reply_tree.vertical_gap(root_reply, child_reply)).to be >= 8
 
     reply_tree.collapse(child_reply)
 

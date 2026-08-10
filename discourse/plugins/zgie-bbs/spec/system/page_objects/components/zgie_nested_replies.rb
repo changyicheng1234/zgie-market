@@ -40,6 +40,25 @@ module PageObjects
         has_css?(wrapper_selector(post, ".names"), text: relation)
       end
 
+      def vertical_gap(root_post, child_post)
+        page.evaluate_script(<<~JS)
+          (() => {
+            const rootArticle = document.querySelector(
+              "[data-post-number='#{root_post.post_number}']"
+            );
+            const childWrapper = document
+              .querySelector("[data-post-number='#{child_post.post_number}']")
+              .closest(".nested-post");
+            const childAvatar = childWrapper.querySelector(
+              ":scope > .nested-post__gutter .topic-avatar"
+            );
+
+            return childAvatar.getBoundingClientRect().top -
+              rootArticle.getBoundingClientRect().bottom;
+          })()
+        JS
+      end
+
       def collapse(post)
         find(
           wrapper_selector(
