@@ -1,0 +1,4 @@
+zh_CN:
+  js:
+    zgie_bbs:
+      nested_reply_to: "回复 %{username}"

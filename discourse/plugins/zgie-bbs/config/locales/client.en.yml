@@ -1,0 +1,4 @@
+en:
+  js:
+    zgie_bbs:
+      nested_reply_to: "Reply to %{username}"

@@ -122,7 +122,7 @@ module ZgieBbs
       {
         key: "reply-01",
         author: :primary,
-        raw: "甲的一级留言：下面的回复只会出现在这一条留言下，不会追加到主题末尾。"
+        raw: "这是一条一级留言。下面的回复只会出现在本留言内，不会追加到主题末尾。"
       },
       { key: "reply-02", author: :primary, raw: <<~'MARKDOWN' },
           > 这是回复中的引用块。
@@ -133,7 +133,7 @@ module ZgieBbs
         key: "reply-03",
         author: :peer,
         parent_key: "reply-01",
-        raw: "乙回复甲：这是第一条楼中楼回复，用于检查 `reply_to_post_number` 关系。"
+        raw: "这是第一条楼中楼回复，用于检查 `reply_to_post_number` 关系。"
       },
       { key: "reply-04", author: :primary, raw: <<~'MARKDOWN' },
           回复也可以包含代码块：
@@ -178,7 +178,7 @@ module ZgieBbs
         key: "reply-10",
         author: :primary,
         parent_key: "reply-03",
-        raw: "甲回复乙：虽然这条回复实际指向乙，但视觉上仍与乙同级，只显示在甲的一级留言下。 :tada:"
+        raw: "这条留言实际回复上一条楼中楼内容，但视觉上仍保持二级，只显示在所属一级留言下。 :tada:"
       }
     ].freeze
 
@@ -252,7 +252,7 @@ module ZgieBbs
     def ensure_topic(user, attributes)
       key = attributes.fetch(:key)
       topic = topic_by_key(key)
-      return topic if topic
+      return reconcile_topic(topic, attributes) if topic
 
       category = Category.find_by!(slug: attributes.fetch(:category_slug))
       first_post =
@@ -271,6 +271,35 @@ module ZgieBbs
         )
       @created_topics += 1
       first_post.topic
+    end
+
+    def reconcile_topic(topic, attributes)
+      first_post = topic.first_post
+      changes = {}
+      raw = attributes.fetch(:raw)
+      title = attributes.fetch(:title)
+
+      changes[:raw] = raw if first_post.raw.strip != raw.strip
+      changes[:title] = title if topic.title != title
+
+      if changes.present?
+        revised =
+          first_post.revise(
+            Discourse.system_user,
+            changes,
+            bypass_bump: true,
+            silent: true,
+            skip_revision: true,
+            skip_validations: true
+          )
+        if !revised && first_post.errors.present?
+          raise "Could not refresh demo topic #{attributes.fetch(:key)}: " \
+                  "#{first_post.errors.full_messages.join(", ")}"
+        end
+      end
+
+      first_post.rebake!
+      topic.reload
     end
 
     def ensure_replies(authors, topic)
@@ -337,6 +366,7 @@ module ZgieBbs
 
       @updated_replies += 1 if updated
       post.reload if updated
+      post.rebake!
       post
     end
 

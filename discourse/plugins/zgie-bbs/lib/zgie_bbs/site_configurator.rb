@@ -25,6 +25,7 @@ module ZgieBbs
 
     def call
       configure_identity
+      configure_urls
       configure_access
       configure_discussions
       create_categories
@@ -41,6 +42,18 @@ module ZgieBbs
       SiteSetting.enable_local_logins = true
       SiteSetting.enable_local_logins_via_email = true
       SiteSetting.allow_new_registrations = true
+    end
+
+    def configure_urls
+      hostname = fetch("ZGIE_EXTERNAL_HOSTNAME", "").strip
+      port = fetch("ZGIE_EXTERNAL_PORT", "").strip
+
+      SiteSetting.force_hostname = hostname if hostname.present?
+      SiteSetting.port = port if port.present?
+
+      # The default avatar proxy depends on avatars.discourse-cdn.com. Local
+      # letter avatars keep an invite-only installation self-contained.
+      SiteSetting.external_system_avatars_url = ""
     end
 
     def configure_access

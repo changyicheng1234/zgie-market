@@ -36,6 +36,7 @@ RSpec.describe ZgieBbs::DemoSeeder do
 
       expect(result.user).to be_active
       expect(result.peer_user).to be_active
+      expect(result.user.avatar_template).to start_with("/letter_avatar/")
       expect(
         result.user.confirm_password?(env.fetch("ZGIE_DEMO_PASSWORD"))
       ).to eq(true)
@@ -44,6 +45,9 @@ RSpec.describe ZgieBbs::DemoSeeder do
       )
       expect(replies.count).to eq(10)
       expect(rendered_elements).to all(be_present)
+      expect(
+        described_class::REPLIES.map { |reply| reply.fetch(:raw) }.join
+      ).not_to match(/甲回复乙|乙回复甲/)
     end
 
     it "creates a reply-to-child chain with two distinct authors" do
@@ -69,12 +73,22 @@ RSpec.describe ZgieBbs::DemoSeeder do
     end
 
     it "does not duplicate users, topics, or posts when rerun" do
-      described_class.call(env:, output: StringIO.new)
+      first_result = described_class.call(env:, output: StringIO.new)
       counts = [User.count, Topic.count, Post.count]
+      first_result.showcase_topic.first_post.update_columns(
+        raw: "stale fixture",
+        cooked: "<p>stale fixture</p>"
+      )
 
-      described_class.call(env:, output: StringIO.new)
+      second_result = described_class.call(env:, output: StringIO.new)
 
       expect([User.count, Topic.count, Post.count]).to eq(counts)
+      expect(second_result.showcase_topic.first_post.raw.strip).to eq(
+        described_class::TOPICS.first.fetch(:raw).strip
+      )
+      expect(second_result.showcase_topic.first_post.cooked).not_to include(
+        "stale fixture"
+      )
     end
   end
 end

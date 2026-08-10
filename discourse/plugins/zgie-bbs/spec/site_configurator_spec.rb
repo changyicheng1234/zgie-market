@@ -7,6 +7,8 @@ RSpec.describe ZgieBbs::SiteConfigurator do
       "ZGIE_SITE_DESCRIPTION" => "测试描述",
       "ZGIE_DEFAULT_LOCALE" => "zh_CN",
       "ZGIE_LOGIN_REQUIRED" => "true",
+      "ZGIE_EXTERNAL_HOSTNAME" => "bbs.test.localhost",
+      "ZGIE_EXTERNAL_PORT" => "4200",
       "ZGIE_REGISTRATION_MODE" => "global_code",
       "ZGIE_INVITE_CODE" => "test-code"
     }
@@ -20,6 +22,9 @@ RSpec.describe ZgieBbs::SiteConfigurator do
       expect(SiteSetting.login_required).to eq(true)
       expect(SiteSetting.invite_only).to eq(false)
       expect(SiteSetting.invite_code).to eq("test-code")
+      expect(SiteSetting.force_hostname).to eq("bbs.test.localhost")
+      expect(SiteSetting.port).to eq("4200")
+      expect(SiteSetting.external_system_avatars_url).to eq("")
       expect(Category.find_by(slug: "study")&.name).to eq("学习交流")
     end
 

@@ -8,14 +8,14 @@ RSpec.describe "Fixed nested replies" do
   fab!(:topic) { Fabricate(:topic, user: primary_user) }
   fab!(:op) { Fabricate(:post, topic:, user: primary_user, post_number: 1) }
   fab!(:root_reply) do
-    Fabricate(:post, topic:, user: primary_user, raw: "甲发布的一级留言")
+    Fabricate(:post, topic:, user: primary_user, raw: "一级留言内容")
   end
   fab!(:child_reply) do
     Fabricate(
       :post,
       topic:,
       user: peer_user,
-      raw: "乙在楼中楼回复甲",
+      raw: "二级留言内容",
       reply_to_post_number: root_reply.post_number
     )
   end
@@ -39,7 +39,7 @@ RSpec.describe "Fixed nested replies" do
     reply_text = "甲回复乙后仍留在同一个楼中楼"
     nested_view.visit_nested(topic)
 
-    expect(reply_tree).to have_reply_at_depth("乙在楼中楼回复甲", depth: 1)
+    expect(reply_tree).to have_reply_at_depth("二级留言内容", depth: 1)
     nested_view.click_reply_on_post(child_reply)
     composer.fill_content(reply_text)
     composer.submit
@@ -47,5 +47,26 @@ RSpec.describe "Fixed nested replies" do
     expect(composer).to be_closed
     expect(reply_tree).to have_reply_at_depth(reply_text, depth: 1)
     expect(reply_tree).to have_no_reply_at_depth(reply_text, depth: 0)
+  end
+
+  it "only lets second-level replies collapse and names the reply target" do
+    nested_view.visit_nested(topic)
+
+    expect(reply_tree).to have_no_collapse_control(root_reply)
+    expect(reply_tree).to have_collapse_control(child_reply)
+    expect(reply_tree).to have_reply_relation(
+      child_reply,
+      from: peer_user.username,
+      to: primary_user.username
+    )
+
+    reply_tree.collapse(child_reply)
+
+    expect(reply_tree).to have_collapsed_reply(child_reply)
+    expect(reply_tree).to have_reply_at_depth("一级留言内容", depth: 0)
+
+    reply_tree.expand(child_reply)
+
+    expect(reply_tree).to have_reply_at_depth("二级留言内容", depth: 1)
   end
 end

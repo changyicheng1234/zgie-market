@@ -2,3 +2,110 @@
   border-block-end: 0.1875rem solid var(--tertiary);
   box-shadow: 0 0.125rem 0.625rem rgb(var(--primary-rgb), 0.08);
 }
+
+// A root reply owns the whole thread card. Its stronger surface and accent
+// keep it visually distinct from the compact replies nested beneath it.
+.nested-view__roots > .nested-post.--depth-0 {
+  --nested-avatar-size: 36px;
+  margin-block: var(--space-4);
+  padding: var(--space-3);
+  background: var(--secondary);
+  border: 1px solid var(--primary-low);
+  border-radius: var(--d-border-radius-large);
+  box-shadow: 0 0.125rem 0.5rem rgb(var(--primary-rgb), 0.08);
+
+  &:first-child {
+    margin-block-start: 0;
+  }
+
+  > .nested-post__gutter {
+    padding-block-start: var(--space-2);
+
+    .topic-avatar img.avatar {
+      width: 36px;
+      height: 36px;
+    }
+
+    // First-level replies are never collapse targets. The JavaScript guard is
+    // authoritative; this also removes the misleading native control.
+    .nested-post__depth-line {
+      display: none;
+    }
+  }
+
+  > .nested-post__main > .nested-post__article {
+    padding: var(--space-3) var(--space-4);
+    background: var(--primary-very-low);
+    border-inline-start: 0.1875rem solid var(--tertiary);
+    border-radius: var(--d-border-radius);
+
+    .nested-post__header .names .first {
+      font-size: var(--font-up-1);
+      font-weight: 700;
+    }
+
+    .nested-post__content {
+      font-size: var(--font-up-1);
+      line-height: var(--line-height-large);
+    }
+  }
+
+  > .nested-post__main > .nested-post-children {
+    margin-block-start: var(--space-2);
+
+    > .nested-post > .nested-post__parent-line-btn {
+      display: none;
+    }
+  }
+}
+
+.nested-view .nested-post.--depth-1 {
+  --nested-avatar-size: 24px;
+
+  > .nested-post__gutter
+    .nested-post__depth-line-icon
+    .d-icon {
+    color: var(--tertiary);
+    opacity: 0.85;
+  }
+
+  .zgie-reply-target {
+    display: inline-flex;
+  }
+}
+
+.zgie-reply-target {
+  display: none;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--primary-medium);
+  font-size: var(--font-down-1);
+  font-weight: 600;
+
+  &__separator {
+    color: var(--tertiary);
+    font-size: var(--font-up-1);
+    line-height: 1;
+  }
+
+  a {
+    color: var(--primary-high);
+  }
+}
+
+@media (width <= 767px) {
+  .nested-view__roots > .nested-post.--depth-0 {
+    --nested-avatar-size: 32px;
+    margin-block: var(--space-2);
+    padding: var(--space-2);
+
+    > .nested-post__gutter .topic-avatar img.avatar {
+      width: 32px;
+      height: 32px;
+    }
+
+    > .nested-post__main > .nested-post__article {
+      padding: var(--space-2) var(--space-3);
+    }
+  }
+}
