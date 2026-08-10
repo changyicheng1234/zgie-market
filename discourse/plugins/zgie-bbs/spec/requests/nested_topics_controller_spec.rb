@@ -69,6 +69,8 @@ RSpec.describe NestedTopicsController do
       expect(children.last.dig("reply_to_user", "username")).to eq(
         peer_user.username
       )
+      expect(children.first["zgie_replies_to_nested_reply"]).to eq(false)
+      expect(children.last["zgie_replies_to_nested_reply"]).to eq(true)
     end
   end
 end

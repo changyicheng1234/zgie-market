@@ -19,6 +19,15 @@ RSpec.describe "Fixed nested replies" do
       reply_to_post_number: root_reply.post_number
     )
   end
+  fab!(:reply_to_child) do
+    Fabricate(
+      :post,
+      topic:,
+      user: primary_user,
+      raw: "一级作者继续回复二级作者",
+      reply_to_post_number: child_reply.post_number
+    )
+  end
 
   let(:nested_view) { PageObjects::Pages::NestedView.new }
   let(:composer) { PageObjects::Components::Composer.new }
@@ -49,17 +58,19 @@ RSpec.describe "Fixed nested replies" do
     expect(reply_tree).to have_no_reply_at_depth(reply_text, depth: 0)
   end
 
-  it "only lets second-level replies collapse and names the reply target" do
+  it "only lets second-level replies collapse and selectively names the reply target" do
     nested_view.visit_nested(topic)
 
     expect(reply_tree).to have_no_collapse_control(root_reply)
     expect(reply_tree).to have_collapse_control(child_reply)
+    expect(reply_tree).to have_no_reply_relation(child_reply)
+    reply_tree.load_more(root_reply)
     expect(reply_tree).to have_reply_relation(
-      child_reply,
-      from: peer_user.username,
-      to: primary_user.username
+      reply_to_child,
+      from: primary_user.username,
+      to: peer_user.username
     )
-    expect(reply_tree.vertical_gap(root_reply, child_reply)).to be >= 8
+    expect(reply_tree).to have_no_jump_control
 
     reply_tree.collapse(child_reply)
 

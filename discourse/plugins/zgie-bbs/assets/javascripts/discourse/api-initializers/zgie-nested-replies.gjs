@@ -7,7 +7,7 @@ import { i18n } from "discourse-i18n";
 class ZgieReplyTarget extends Component {
   static shouldRender(args) {
     return (
-      (args.post.reply_to_post_number || 0) > 1 &&
+      args.post.zgie_replies_to_nested_reply === true &&
       Boolean(args.post.reply_to_user?.username)
     );
   }

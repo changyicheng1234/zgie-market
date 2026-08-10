@@ -13,9 +13,78 @@ register_asset "stylesheets/common/zgie-bbs.scss"
 
 module ::ZgieBbs
   PLUGIN_NAME = "zgie-bbs"
+
+  module PostReplyTargetExtension
+    def zgie_replies_to_nested_reply?
+      if defined?(@zgie_replies_to_nested_reply)
+        return @zgie_replies_to_nested_reply
+      end
+
+      parent = reply_to_post
+      @zgie_replies_to_nested_reply =
+        parent.present? && parent.reply_to_post_number.present? &&
+          parent.reply_to_post_number != 1
+    end
+  end
+
+  module NestedReplyTargetPreloaderExtension
+    def prepare(posts)
+      preload_zgie_reply_target_levels(posts)
+      super
+    end
+
+    private
+
+    def preload_zgie_reply_target_levels(posts)
+      posts_by_number = posts.index_by(&:post_number)
+      target_numbers =
+        posts
+          .filter_map do |post|
+            target = post.reply_to_post_number
+            target if target.present? && target != 1
+          end
+          .uniq
+      missing_target_numbers = target_numbers - posts_by_number.keys
+      missing_target_levels =
+        if missing_target_numbers.empty?
+          {}
+        else
+          Post
+            .where(topic_id: @topic.id, post_number: missing_target_numbers)
+            .pluck(:post_number, :reply_to_post_number)
+            .to_h
+        end
+
+      posts.each do |post|
+        target_number = post.reply_to_post_number
+        target = posts_by_number[target_number]
+        target_parent_number =
+          target&.reply_to_post_number || missing_target_levels[target_number]
+
+        post.instance_variable_set(
+          :@zgie_replies_to_nested_reply,
+          target_number.present? && target_number != 1 &&
+            target_parent_number.present? && target_parent_number != 1
+        )
+      end
+    end
+  end
 end
 
 after_initialize do
   require_relative "lib/zgie_bbs/demo_seeder"
   require_relative "lib/zgie_bbs/site_configurator"
+
+  reloadable_patch do
+    Post.prepend(ZgieBbs::PostReplyTargetExtension)
+    NestedReplies::PostPreloader.prepend(
+      ZgieBbs::NestedReplyTargetPreloaderExtension
+    )
+  end
+
+  add_to_serializer(
+    :post,
+    :zgie_replies_to_nested_reply,
+    include_condition: -> { topic&.nested_view? }
+  ) { object.zgie_replies_to_nested_reply? }
 end

@@ -3,44 +3,19 @@
   box-shadow: 0 0.125rem 0.625rem rgb(var(--primary-rgb), 0.08);
 }
 
-// A root reply owns the whole thread card. Its primary article and nested
-// reply rail occupy separate visual regions so their surfaces never overlap.
+// Keep Discourse's native, borderless thread layout. First-level comments use
+// a slightly larger scale and more breathing room; their replies remain on the
+// original connector rail instead of entering a separate card or panel.
 .nested-view__roots > .nested-post.--depth-0 {
-  --nested-avatar-size: 36px;
-  margin-block: var(--space-4);
-  padding: var(--space-3);
-  background: var(--secondary);
-  border: 1px solid var(--primary-low);
-  border-radius: var(--d-border-radius-large);
-  box-shadow: 0 0.125rem 0.5rem rgb(var(--primary-rgb), 0.08);
+  --nested-avatar-size: 40px;
+  margin-block-end: var(--space-5);
 
-  &:first-child {
-    margin-block-start: 0;
-  }
-
-  > .nested-post__gutter {
-    padding-block-start: var(--space-2);
-
-    .topic-avatar img.avatar {
-      width: 36px;
-      height: 36px;
-    }
-
-    // First-level replies are never collapse targets. The JavaScript guard is
-    // authoritative; this also removes the misleading native control.
-    .nested-post__depth-line {
-      display: none;
-    }
+  > .nested-post__gutter .topic-avatar img.avatar {
+    width: 40px;
+    height: 40px;
   }
 
   > .nested-post__main > .nested-post__article {
-    box-sizing: border-box;
-    padding: var(--space-3) var(--space-4);
-    background: var(--primary-very-low);
-    border: 1px solid var(--primary-low);
-    border-block-start: 0.1875rem solid var(--tertiary);
-    border-radius: var(--d-border-radius);
-
     .nested-post__header .names .first {
       font-size: var(--font-up-1);
       font-weight: 700;
@@ -53,34 +28,21 @@
   }
 
   > .nested-post__main > .nested-post-children {
-    box-sizing: border-box;
-    margin-block-start: var(--space-4);
-    padding-block-start: var(--space-3);
-    border-block-start: 1px solid var(--primary-low);
-
-    > .nested-post > .nested-post__parent-line-btn {
-      display: none;
-    }
+    margin-block-start: var(--space-3);
   }
 }
 
 .nested-view .nested-post.--depth-1 {
-  --nested-avatar-size: 24px;
+  --nested-avatar-size: 32px;
 
-  > .nested-post__gutter
-    .nested-post__depth-line-icon
-    .d-icon {
-    color: var(--tertiary);
-    opacity: 0.85;
-  }
-
-  .zgie-reply-target {
-    display: inline-flex;
+  > .nested-post__gutter .topic-avatar img.avatar {
+    width: 32px;
+    height: 32px;
   }
 }
 
 .zgie-reply-target {
-  display: none;
+  display: inline-flex;
   align-items: center;
   gap: var(--space-1);
   color: var(--primary-medium);
@@ -98,24 +60,28 @@
   }
 }
 
+// Capped two-level threads stay in place under their root comment. There is
+// no separate context page in this product, so never offer a jump control.
+.nested-view .nested-post__continue-link {
+  display: none;
+}
+
 @media (width <= 767px) {
   .nested-view__roots > .nested-post.--depth-0 {
-    --nested-avatar-size: 32px;
-    margin-block: var(--space-2);
-    padding: var(--space-2);
+    --nested-avatar-size: 36px;
 
     > .nested-post__gutter .topic-avatar img.avatar {
-      width: 32px;
-      height: 32px;
+      width: 36px;
+      height: 36px;
     }
+  }
 
-    > .nested-post__main > .nested-post__article {
-      padding: var(--space-2) var(--space-3);
-    }
+  .nested-view .nested-post.--depth-1 {
+    --nested-avatar-size: 28px;
 
-    > .nested-post__main > .nested-post-children {
-      margin-block-start: var(--space-3);
-      padding-block-start: var(--space-2);
+    > .nested-post__gutter .topic-avatar img.avatar {
+      width: 28px;
+      height: 28px;
     }
   }
 }
