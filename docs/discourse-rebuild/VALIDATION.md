@@ -4,7 +4,7 @@
 
 ## 固定版本
 
-- 实验分支：`experiment/discourse-rebuild`
+- 功能分支：`codex/feature-discourse-bbs`
 - 独立 worktree：`/home/matrix/zgie-market-discourse`
 - Discourse：`cb5b167333b1f8af31b8d5dd31cd1962ba18bf92`
 - 开发镜像：`docker.io/discourse/discourse_dev:20260803-0122`

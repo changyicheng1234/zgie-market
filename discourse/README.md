@@ -7,7 +7,7 @@
 要求：Git、兼容 Docker CLI 的容器运行时，以及 Docker Compose。当前开发机使用 rootless Podman 的 Docker 兼容层。
 
 ```bash
-cd /home/matrix/zgie-market-discourse/discourse
+cd discourse
 cp .env.example .env
 # 修改 .env 中的 ZGIE_INVITE_CODE
 ./bin/dev bootstrap
