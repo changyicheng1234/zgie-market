@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "page_objects/components/zgie_nested_replies"
+require_relative "page_objects/components/zgie_anonymous_composer_toggle"
 
 RSpec.describe "Fixed nested replies" do
   fab!(:primary_user) { Fabricate(:user, refresh_auto_groups: true) }
@@ -31,6 +32,9 @@ RSpec.describe "Fixed nested replies" do
 
   let(:nested_view) { PageObjects::Pages::NestedView.new }
   let(:composer) { PageObjects::Components::Composer.new }
+  let(:anonymous_toggle) do
+    PageObjects::Components::ZgieAnonymousComposerToggle.new
+  end
   let(:reply_tree) { PageObjects::Components::ZgieNestedReplies.new }
   let(:user_menu) { PageObjects::Components::UserMenu.new }
 
@@ -174,12 +178,11 @@ RSpec.describe "Fixed nested replies" do
     nested_view.visit_nested(topic)
     nested_view.click_reply_on_post(root_reply)
 
-    expect(page).to have_css(".zgie-anonymous-composer-toggle", text: "匿名回复")
-    expect(page).to have_css(
-      "[data-zgie-anonymous-toggle][aria-checked='false']"
-    )
+    expect(anonymous_toggle).to have_label("匿名回复")
+    expect(anonymous_toggle).to have_state(false)
 
-    find(".zgie-anonymous-composer-toggle .d-toggle-switch__label").click
+    anonymous_toggle.click_visible_label
+    expect(anonymous_toggle).to have_state(true)
     composer.fill_content("匿")
     composer.submit
 
@@ -193,15 +196,13 @@ RSpec.describe "Fixed nested replies" do
     )
 
     nested_view.click_reply_on_post(root_reply)
-    expect(page).to have_css(
-      "[data-zgie-anonymous-toggle][aria-checked='false']"
-    )
+    expect(anonymous_toggle).to have_state(false)
     composer.fill_content("明")
     composer.submit
     expect(Post.find_by!(topic:, raw: "明").user).to eq(primary_user)
 
     visit "/new-topic"
-    expect(page).to have_css(".zgie-anonymous-composer-toggle", text: "匿名发帖")
+    expect(anonymous_toggle).to have_label("匿名发帖")
 
     visit topic.url
     user_menu.open.click_profile_tab

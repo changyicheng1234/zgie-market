@@ -68,6 +68,8 @@
 // Anonymous identity is a property of the current submission, never a user
 // session preference. Keep the control close to the composer submit action.
 .zgie-anonymous-composer-toggle {
+  --zgie-toggle-width: 45px;
+  --zgie-toggle-height: 24px;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -75,13 +77,76 @@
   padding: var(--space-1) var(--space-2);
   color: var(--primary-high);
 
-  .d-toggle-switch__checkbox-label {
+  &__control {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+
+    &:hover .zgie-anonymous-composer-toggle__slider {
+      background: var(--primary-high);
+    }
+
+    &[aria-checked="true"]
+      .zgie-anonymous-composer-toggle__slider {
+      background: var(--tertiary);
+    }
+
+    &[aria-checked="true"]
+      .zgie-anonymous-composer-toggle__slider::before {
+      inset-inline-start: calc(
+        var(--zgie-toggle-width) - var(--zgie-toggle-height) * 0.875
+      );
+    }
+
+    &:focus-visible .zgie-anonymous-composer-toggle__slider {
+      outline: 2px solid var(--tertiary);
+      outline-offset: 2px;
+    }
+  }
+
+  &__slider {
+    position: relative;
+    display: inline-block;
+    flex: 0 0 auto;
+    width: var(--zgie-toggle-width);
+    height: var(--zgie-toggle-height);
+    border-radius: var(--zgie-toggle-height);
+    background: var(--primary-low-mid);
+    transition: background 0.25s;
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset-block-start: calc(var(--zgie-toggle-height) * 0.125);
+      inset-inline-start: calc(var(--zgie-toggle-height) * 0.125);
+      width: calc(var(--zgie-toggle-height) * 0.75);
+      height: calc(var(--zgie-toggle-height) * 0.75);
+      border-radius: 50%;
+      background: var(--secondary);
+      transition: inset-inline-start 0.25s;
+    }
+  }
+
+  &__label {
     font-weight: 600;
   }
 
   &__hint {
     color: var(--primary-medium);
     font-size: var(--font-down-1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__slider,
+    &__slider::before {
+      transition-duration: 0ms;
+    }
   }
 }
 
