@@ -2,5 +2,9 @@ en:
   js:
     zgie_bbs:
       anonymous_author: "Anonymous user"
+      composer:
+        anonymous_topic: "Post anonymously"
+        anonymous_reply: "Reply anonymously"
+        anonymous_hint: "Hide your identity for this submission only"
       nested_reply_to: "Reply to %{username}"
       topic_position: "Post %{current} of %{total}"

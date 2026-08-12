@@ -85,6 +85,14 @@ module ZgieBbs
     end
 
     def configure_discussions
+      # Empty content remains invalid, but ZGIE does not impose editorial
+      # character-count thresholds on topics or replies. The maximum is the
+      # largest value supported by this Discourse version.
+      SiteSetting.min_topic_title_length = 1
+      SiteSetting.max_topic_title_length = 255
+      SiteSetting.min_first_post_length = 1
+      SiteSetting.min_post_length = 1
+      SiteSetting.max_post_length = 150_000
       SiteSetting.allow_anonymous_mode = true
       SiteSetting.allow_likes_in_anonymous_mode = true
       SiteSetting.anonymous_posting_allowed_groups =

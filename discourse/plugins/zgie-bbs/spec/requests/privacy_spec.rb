@@ -15,50 +15,95 @@ RSpec.describe "ZGIE privacy" do
       },
       output: StringIO.new
     )
+    SiteSetting.fast_typing_threshold = "disabled"
   end
 
-  it "switches any signed-in member to a shadow account that can create topics and replies" do
+  it "uses a shadow only for selected topics and replies without changing the session" do
+    sign_in(member)
+    category = Category.find_by!(slug: "study")
+
+    post "/posts.json",
+         params: {
+           title: "题",
+           raw: "文",
+           category: category.id,
+           zgie_anonymous: "true"
+         }
+
+    expect(response.status).to eq(200), response.body
+    topic_post = Post.find(response.parsed_body.fetch("id"))
+    anonymous_user = topic_post.user
+    expect(anonymous_user).to be_anonymous
+    expect(anonymous_user.master_user).to eq(member)
+    expect(session[:current_user_id]).to eq(member.id)
+
+    post "/posts.json",
+         params: {
+           topic_id: topic_post.topic_id,
+           raw: "匿",
+           zgie_anonymous: true
+         }
+
+    expect(response.status).to eq(200)
+    anonymous_reply = Post.find(response.parsed_body.fetch("id"))
+    expect(anonymous_reply.user).to eq(anonymous_user)
+    expect(session[:current_user_id]).to eq(member.id)
+    expect(Guardian.new(member).can_edit_post?(anonymous_reply)).to eq(true)
+
+    post "/posts.json",
+         params: {
+           topic_id: topic_post.topic_id,
+           raw: "明",
+           zgie_anonymous: "false"
+         }
+
+    expect(response.status).to eq(200)
+    named_reply = Post.find(response.parsed_body.fetch("id"))
+    expect(named_reply.user).to eq(member)
+    expect(session[:current_user_id]).to eq(member.id)
+
+    SiteSetting.editing_grace_period = 0
+    put "/posts/#{anonymous_reply.id}.json",
+        params: {
+          post: {
+            raw: "匿名修改",
+            original_text: anonymous_reply.raw
+          }
+        }
+
+    expect(response.status).to eq(200), response.body
+    expect(anonymous_reply.reload.last_editor_id).to eq(anonymous_user.id)
+
+    sign_in(viewer)
+    get "/posts/#{anonymous_reply.id}/revisions/latest.json"
+    expect(response.status).to eq(200)
+    expect(response.parsed_body.fetch("username")).to eq(
+      anonymous_user.username_lower
+    )
+    expect(response.body).not_to include(member.username, member.email)
+
+    sign_in(member)
+    delete "/posts/#{anonymous_reply.id}.json"
+    expect(response.status).to eq(200)
+    expect(anonymous_reply.reload).to be_user_deleted
+    expect(anonymous_reply.last_editor_id).to eq(anonymous_user.id)
+  end
+
+  it "blocks entering native session-wide anonymity but lets old sessions exit" do
     sign_in(member)
 
     post "/u/toggle-anon.json"
 
+    expect(response).to be_forbidden
+    expect(session[:current_user_id]).to eq(member.id)
+
+    anonymous_user = AnonymousShadowCreator.get(member)
+    sign_in(anonymous_user)
+
+    post "/u/toggle-anon.json"
+
     expect(response.status).to eq(200)
-    anonymous_user = User.find(session[:current_user_id])
-    expect(anonymous_user).to be_anonymous
-    # Automatic groups are populated out of band in the test environment.
-    anonymous_user.send(:trigger_user_automatic_group_refresh)
-    anonymous_user.reload
-    category = Category.find_by!(slug: "study")
-    anonymous_guardian = Guardian.new(anonymous_user)
-
-    expect(anonymous_guardian.can_create_post?(nil)).to eq(true)
-    expect(anonymous_user.belonging_to_group_ids).to include(
-      Group::AUTO_GROUPS[:trust_level_0]
-    )
-    expect(
-      Category.topic_create_allowed(anonymous_guardian).pluck(:id)
-    ).to include(category.id)
-    expect(anonymous_guardian.can_create_topic?(nil)).to eq(true)
-    expect(anonymous_guardian.can_create_topic_on_category?(category)).to eq(
-      true
-    )
-
-    topic_post =
-      PostCreator.create!(
-        anonymous_user,
-        title: "这是一条用于验证匿名发帖功能的测试主题",
-        raw: "这是一段用于确认匿名主题能够成功发布的测试正文内容。",
-        category: category.id
-      )
-    reply =
-      PostCreator.create!(
-        anonymous_user,
-        topic_id: topic_post.topic_id,
-        raw: "这是一段用于确认匿名留言能够成功发布的测试回复内容。"
-      )
-
-    expect(topic_post.user).to eq(anonymous_user)
-    expect(reply.user).to eq(anonymous_user)
+    expect(session[:current_user_id]).to eq(member.id)
   end
 
   it "marks shadow-authored posts and hides their profile from regular members" do

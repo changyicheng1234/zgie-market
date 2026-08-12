@@ -73,11 +73,23 @@ end
 
 after_initialize do
   require_relative "lib/zgie_bbs/demo_seeder"
+  require_relative "lib/zgie_bbs/per_post_anonymity"
   require_relative "lib/zgie_bbs/privacy"
   require_relative "lib/zgie_bbs/site_configurator"
 
+  add_permitted_post_create_param :zgie_anonymous
+  register_modifier(:posts_controller_create_user) do |user, create_params|
+    ZgieBbs::PerPostAnonymity.author_for(user, create_params)
+  end
+
   reloadable_patch do
     Guardian.prepend(ZgieBbs::AnonymousProfileGuardianExtension)
+    Guardian.prepend(ZgieBbs::AnonymousPostOwnershipGuardianExtension)
+    PostDestroyer.prepend(ZgieBbs::AnonymousPostDestroyerActorExtension)
+    PostRevisor.prepend(ZgieBbs::AnonymousPostRevisorActorExtension)
+    UsersController.prepend(
+      ZgieBbs::PerPostAnonymousSessionControllerExtension
+    )
     PostActionUsersController.prepend(
       ZgieBbs::HiddenLikeActorsControllerExtension
     )

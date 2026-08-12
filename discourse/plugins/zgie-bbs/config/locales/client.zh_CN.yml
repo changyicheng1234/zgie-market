@@ -2,5 +2,9 @@ zh_CN:
   js:
     zgie_bbs:
       anonymous_author: "匿名用户"
+      composer:
+        anonymous_topic: "匿名发帖"
+        anonymous_reply: "匿名回复"
+        anonymous_hint: "仅隐藏本次发布的身份"
       nested_reply_to: "回复 %{username}"
       topic_position: "当前为第 %{current} 条，共 %{total} 条帖子"

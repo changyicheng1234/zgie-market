@@ -65,6 +65,33 @@
   cursor: default;
 }
 
+// Anonymous identity is a property of the current submission, never a user
+// session preference. Keep the control close to the composer submit action.
+.zgie-anonymous-composer-toggle {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  color: var(--primary-high);
+
+  .d-toggle-switch__checkbox-label {
+    font-weight: 600;
+  }
+
+  &__hint {
+    color: var(--primary-medium);
+    font-size: var(--font-down-1);
+  }
+}
+
+// Defensive fallback while Ember boots: the native session-wide anonymous
+// entry must never flash in the user menu.
+.user-menu .enable-anonymous,
+.user-menu .disable-anonymous {
+  display: none;
+}
+
 // Reactions remain actionable through the separate heart/emoji picker. Their
 // aggregate summary is deliberately read-only and never opens an actor list.
 .post-action-menu__like-count,

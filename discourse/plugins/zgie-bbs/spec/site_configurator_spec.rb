@@ -42,9 +42,18 @@ RSpec.describe ZgieBbs::SiteConfigurator do
       ).to eq([true, true, 1, true, "old"])
     end
 
-    it "allows every signed-in member to post and react anonymously" do
+    it "allows per-post anonymity and removes editorial length thresholds" do
       described_class.call(env:, output: StringIO.new)
 
+      expect(
+        [
+          SiteSetting.min_topic_title_length,
+          SiteSetting.max_topic_title_length,
+          SiteSetting.min_first_post_length,
+          SiteSetting.min_post_length,
+          SiteSetting.max_post_length
+        ]
+      ).to eq([1, 255, 1, 1, 150_000])
       expect(SiteSetting.allow_anonymous_mode).to eq(true)
       expect(SiteSetting.allow_likes_in_anonymous_mode).to eq(true)
       expect(

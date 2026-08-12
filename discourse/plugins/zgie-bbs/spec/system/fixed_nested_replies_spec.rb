@@ -32,6 +32,7 @@ RSpec.describe "Fixed nested replies" do
   let(:nested_view) { PageObjects::Pages::NestedView.new }
   let(:composer) { PageObjects::Components::Composer.new }
   let(:reply_tree) { PageObjects::Components::ZgieNestedReplies.new }
+  let(:user_menu) { PageObjects::Components::UserMenu.new }
 
   before do
     ZgieBbs::SiteConfigurator.call(
@@ -120,6 +121,53 @@ RSpec.describe "Fixed nested replies" do
         total: topic.reload.highest_post_number
       )
     end
+  end
+
+  it "chooses anonymity per submission and removes the user-menu switch" do
+    nested_view.visit_nested(topic)
+    nested_view.click_reply_on_post(root_reply)
+
+    expect(page).to have_css(
+      ".zgie-anonymous-composer-toggle",
+      text: "匿名回复"
+    )
+    expect(page).to have_css(
+      "[data-zgie-anonymous-toggle][aria-checked='false']"
+    )
+
+    find(".zgie-anonymous-composer-toggle .d-toggle-switch__label").click
+    composer.fill_content("匿")
+    composer.submit
+
+    expect(composer).to be_closed
+    anonymous_reply = Post.find_by!(topic:, raw: "匿")
+    expect(anonymous_reply.user).to be_anonymous
+
+    nested_view.visit_nested(topic)
+    expect(reply_tree).to have_noninteractive_anonymous_identity(
+      anonymous_reply
+    )
+
+    nested_view.click_reply_on_post(root_reply)
+    expect(page).to have_css(
+      "[data-zgie-anonymous-toggle][aria-checked='false']"
+    )
+    composer.fill_content("明")
+    composer.submit
+    expect(Post.find_by!(topic:, raw: "明").user).to eq(primary_user)
+
+    visit "/new-topic"
+    expect(page).to have_css(
+      ".zgie-anonymous-composer-toggle",
+      text: "匿名发帖"
+    )
+
+    visit topic.url
+    user_menu.open.click_profile_tab
+    expect(page).to have_no_css(
+      "#quick-access-profile .enable-anonymous, " \
+        "#quick-access-profile .disable-anonymous"
+    )
   end
 
   it "keeps reaction emoji and counts visible without opening actor lists" do
