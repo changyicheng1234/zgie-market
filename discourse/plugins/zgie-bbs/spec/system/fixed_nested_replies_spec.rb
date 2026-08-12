@@ -31,6 +31,8 @@ RSpec.describe "Fixed nested replies" do
   end
 
   let(:nested_view) { PageObjects::Pages::NestedView.new }
+  let(:topic_page) { PageObjects::Pages::Topic.new }
+  let(:drafts_page) { PageObjects::Pages::UserActivityDrafts.new }
   let(:composer) { PageObjects::Components::Composer.new }
   let(:anonymous_toggle) do
     PageObjects::Components::ZgieAnonymousComposerToggle.new
@@ -210,6 +212,29 @@ RSpec.describe "Fixed nested replies" do
       "#quick-access-profile .enable-anonymous, " \
         "#quick-access-profile .disable-anonymous"
     )
+  end
+
+  it "keeps a successfully published anonymous topic out of the user's drafts" do
+    title = "匿名发布后不保留草稿"
+    visit "/new-topic"
+    composer.fill_title(title)
+    composer.fill_content("发布成功后，这段正文不能继续出现在草稿箱中。")
+    anonymous_toggle.click_visible_label
+
+    try_until_success(reason: "wait for the composer autosave") do
+      expect(
+        Draft
+          .where(user: primary_user)
+          .where("draft_key LIKE ?", "#{Draft::NEW_TOPIC}_%")
+          .exists?
+      ).to eq(true)
+    end
+
+    composer.submit
+
+    expect(topic_page).to have_topic_title(title)
+    drafts_page.visit(primary_user)
+    expect(drafts_page).to have_no_drafts
   end
 
   it "keeps reaction emoji and counts visible without opening actor lists" do

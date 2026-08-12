@@ -71,6 +71,10 @@ module ::ZgieBbs
   end
 end
 
+on(:post_created) do |post, options, author|
+  ZgieBbs::PerPostAnonymity.clear_master_draft!(post, options, author)
+end
+
 after_initialize do
   require_relative "lib/zgie_bbs/demo_seeder"
   require_relative "lib/zgie_bbs/per_post_anonymity"
@@ -87,9 +91,7 @@ after_initialize do
     Guardian.prepend(ZgieBbs::AnonymousPostOwnershipGuardianExtension)
     PostDestroyer.prepend(ZgieBbs::AnonymousPostDestroyerActorExtension)
     PostRevisor.prepend(ZgieBbs::AnonymousPostRevisorActorExtension)
-    UsersController.prepend(
-      ZgieBbs::PerPostAnonymousSessionControllerExtension
-    )
+    UsersController.prepend(ZgieBbs::PerPostAnonymousSessionControllerExtension)
     PostActionUsersController.prepend(
       ZgieBbs::HiddenLikeActorsControllerExtension
     )

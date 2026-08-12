@@ -25,7 +25,24 @@ module ZgieBbs
       return true if params[:archetype] == Archetype.private_message
       return false if params[:topic_id].blank?
 
-      Topic.where(id: params[:topic_id], archetype: Archetype.private_message).exists?
+      Topic.where(
+        id: params[:topic_id],
+        archetype: Archetype.private_message
+      ).exists?
+    end
+
+    def self.clear_master_draft!(post, params, author)
+      return unless SiteSetting.zgie_bbs_enabled
+      return unless BOOLEAN_TYPE.cast(params[:zgie_anonymous])
+      return unless BOOLEAN_TYPE.cast(params[:advance_draft])
+
+      master_user = AnonymousShadowCreator.get_master(author)
+      return if master_user.blank?
+
+      draft_key = params[:draft_key].presence
+      draft_key ||=
+        post.post_number == 1 ? Draft::NEW_TOPIC : post.topic.draft_key
+      DraftSequence.next!(master_user, draft_key)
     end
 
     def self.actor_for_owned_anonymous_content(user, content)
@@ -79,8 +96,7 @@ module ZgieBbs
   # execute the mutation as that post's shadow author as well.
   module AnonymousPostRevisorActorExtension
     def revise!(editor, fields, opts = {}, &block)
-      editor =
-        PerPostAnonymity.actor_for_owned_anonymous_content(editor, @post)
+      editor = PerPostAnonymity.actor_for_owned_anonymous_content(editor, @post)
       super(editor, fields, opts, &block)
     end
   end

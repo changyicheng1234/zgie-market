@@ -89,6 +89,36 @@ RSpec.describe "ZGIE privacy" do
     expect(anonymous_reply.last_editor_id).to eq(anonymous_user.id)
   end
 
+  it "clears the real account draft after creating an anonymous topic" do
+    sign_in(member)
+    category = Category.find_by!(slug: "study")
+    Draft.set(
+      member,
+      Draft::NEW_TOPIC,
+      0,
+      {
+        title: "匿名草稿主题",
+        reply: "匿名草稿正文",
+        action: "createTopic",
+        zgie_anonymous: true
+      }.to_json
+    )
+
+    post "/posts.json",
+         params: {
+           title: "匿名草稿主题",
+           raw: "匿名草稿正文",
+           category: category.id,
+           draft_key: Draft::NEW_TOPIC,
+           zgie_anonymous: true
+         }
+
+    expect(response.status).to eq(200), response.body
+    expect(Draft.exists?(user: member, draft_key: Draft::NEW_TOPIC)).to eq(
+      false
+    )
+  end
+
   it "blocks entering native session-wide anonymity but lets old sessions exit" do
     sign_in(member)
 
