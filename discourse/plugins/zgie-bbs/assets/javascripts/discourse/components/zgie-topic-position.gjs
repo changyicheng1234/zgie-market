@@ -147,7 +147,7 @@ export default class ZgieTopicPosition extends Component {
   }
 
   _updateCurrentPost() {
-    const posts = [...document.querySelectorAll(POSITIONABLE_POSTS)];
+    const posts = this._postsInReadingOrder();
     if (!posts.length) {
       return;
     }
@@ -172,11 +172,31 @@ export default class ZgieTopicPosition extends Component {
         : closest;
     }, null)?.element;
 
-    const postNumber = Number(post?.dataset.postNumber);
-    if (postNumber > 0) {
-      this.current = postNumber;
+    const readingPosition = posts.indexOf(post) + 1;
+    if (readingPosition > 0) {
+      this.current = readingPosition;
       this.currentDate = this._dateFromPost(post);
     }
+  }
+
+  _postsInReadingOrder() {
+    const nestedView = this._element?.closest(".nested-view");
+    if (!nestedView) {
+      return [];
+    }
+
+    const seenPostNumbers = new Set();
+    return [...nestedView.querySelectorAll(POSITIONABLE_POSTS)].filter(
+      (post) => {
+        const postNumber = Number(post.dataset.postNumber);
+        if (postNumber <= 0 || seenPostNumbers.has(postNumber)) {
+          return false;
+        }
+
+        seenPostNumbers.add(postNumber);
+        return true;
+      }
+    );
   }
 
   _dateFromPost(post) {

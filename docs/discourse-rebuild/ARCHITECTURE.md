@@ -45,7 +45,7 @@ Discourse (Ember + Rails)
 
 点赞和反应仍使用 Discourse 的 PostAction 与 discourse-reactions 数据模型。插件只改变公开读取边界：页面保留 Emoji 和汇总计数，普通成员不能调用参与者名单接口，管理员保留审计读取权限。
 
-右侧楼层进度是纯前端只读视图，数字来源于 Discourse 已有的 `post_number`、`posts_count` 和 `highest_post_number`，不创建另一套楼层编号或滚动状态。
+右侧楼层进度是纯前端只读视图。总数继续来源于 Discourse 已有的 `posts_count` 和 `highest_post_number`；当前位置则按嵌套页面实际渲染的阅读顺序计算，而不直接展示原始 `post_number`。这是因为较晚发布的二级回复会被移回它所属的早期一级留言下，原始楼层号在视觉顺序中并不单调。该阅读位置只存在于当前 DOM，不持久化另一套楼层编号，`post_number` 仍是帖子身份和回复关系的唯一编号。
 
 ## 与旧系统的关系
 

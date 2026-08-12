@@ -117,9 +117,56 @@ RSpec.describe "Fixed nested replies" do
       expect(reply_tree).to have_topic_position_to_right_of_content
       reply_tree.scroll_post_to_reading_line(anonymous_reply)
       expect(reply_tree).to have_topic_position(
-        current: anonymous_reply.post_number,
+        current: 4,
         total: topic.reload.highest_post_number
       )
+    end
+  end
+
+  it "keeps the reading position moving forward past a late nested reply" do
+    progress_topic = Fabricate(:topic, user: primary_user)
+    progress_op =
+      Fabricate(
+        :post,
+        topic: progress_topic,
+        user: primary_user,
+        post_number: 1
+      )
+    early_root =
+      Fabricate(
+        :post,
+        topic: progress_topic,
+        user: primary_user,
+        raw: "较早的一级留言"
+      )
+    later_root =
+      Fabricate(:post, topic: progress_topic, user: peer_user, raw: "后续一级留言")
+    late_child =
+      Fabricate(
+        :post,
+        topic: progress_topic,
+        user: peer_user,
+        raw: "稍后发布但插回前文的二级留言",
+        reply_to_post_number: early_root.post_number
+      )
+    6.times do |index|
+      Fabricate(
+        :post,
+        topic: progress_topic,
+        user: primary_user,
+        raw: "撑开滚动区域的后续留言 #{index + 1}",
+        reply_to_post_number: progress_op.post_number
+      )
+    end
+
+    resize_window(height: 700) do
+      nested_view.visit_nested(progress_topic)
+
+      reply_tree.scroll_post_to_reading_line(late_child)
+      expect(reply_tree).to have_topic_position(current: 3, total: 10)
+
+      reply_tree.scroll_post_to_reading_line(later_root)
+      expect(reply_tree).to have_topic_position(current: 4, total: 10)
     end
   end
 
@@ -127,10 +174,7 @@ RSpec.describe "Fixed nested replies" do
     nested_view.visit_nested(topic)
     nested_view.click_reply_on_post(root_reply)
 
-    expect(page).to have_css(
-      ".zgie-anonymous-composer-toggle",
-      text: "匿名回复"
-    )
+    expect(page).to have_css(".zgie-anonymous-composer-toggle", text: "匿名回复")
     expect(page).to have_css(
       "[data-zgie-anonymous-toggle][aria-checked='false']"
     )
@@ -157,10 +201,7 @@ RSpec.describe "Fixed nested replies" do
     expect(Post.find_by!(topic:, raw: "明").user).to eq(primary_user)
 
     visit "/new-topic"
-    expect(page).to have_css(
-      ".zgie-anonymous-composer-toggle",
-      text: "匿名发帖"
-    )
+    expect(page).to have_css(".zgie-anonymous-composer-toggle", text: "匿名发帖")
 
     visit topic.url
     user_menu.open.click_profile_tab
