@@ -73,6 +73,7 @@ end
 
 on(:post_created) do |post, options, author|
   ZgieBbs::PerPostAnonymity.clear_master_draft!(post, options, author)
+  Jobs.enqueue(:zgie_notify_wecom, post_id: post.id)
 end
 
 after_initialize do
@@ -80,6 +81,7 @@ after_initialize do
   require_relative "lib/zgie_bbs/per_post_anonymity"
   require_relative "lib/zgie_bbs/privacy"
   require_relative "lib/zgie_bbs/site_configurator"
+  require_relative "lib/zgie_bbs/wecom_notify"
 
   add_permitted_post_create_param :zgie_anonymous
   register_modifier(:posts_controller_create_user) do |user, create_params|

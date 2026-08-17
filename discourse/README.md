@@ -55,6 +55,17 @@ cp .env.example .env
 
 这些凭据只用于本机开发；任务默认拒绝在生产环境运行。如确需在临时生产模式环境中生成，必须显式设置 `ZGIE_ALLOW_DEMO_SEED=true`。
 
+## 企业微信群机器人通知
+
+新主题发布（不含私信、不含楼中楼回复）时，插件会异步向企业微信群机器人推送一条 markdown 消息，内容包含分区、标题（匿名帖会加 `[匿名]` 前缀）与跳转链接。
+
+通过环境变量 `ZGIE_WECOM_WEBHOOK_URL` 配置机器人 webhook 地址：
+
+- 本地开发：在 `discourse/.env` 中设置该变量（参考 `.env.example`）。
+- 生产环境：在 `/var/discourse/containers/app.yml` 的 `env` 中设置，然后 `./launcher rebuild app`。
+
+留空则该功能静默跳过，不影响发帖主流程；发送失败也只记日志（`Rails.logger.warn`），不会抛出异常。实现见 `plugins/zgie-bbs/lib/zgie_bbs/wecom_notify.rb`，通过 Sidekiq 任务 `Jobs::ZgieNotifyWecom` 异步执行，避免阻塞发帖请求。
+
 ## 匿名发布与互动隐私
 
 所有已登录成员都可以在新主题或回复编辑器中打开“匿名发帖 / 匿名回复”。该选择只影响本次提交，不改变登录会话，也不会延续到下一条内容；头像菜单不再提供整段会话切换匿名身份的入口。匿名内容仍复用 Discourse 与真实账号关联的影子账号：普通成员看不到真实身份，匿名头像和用户名也不会打开资料页；站务人员仍可按需审计。发布者用真实账号登录时仍可管理自己的匿名内容。

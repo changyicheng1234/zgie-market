@@ -37,6 +37,10 @@ env:
   ZGIE_REGISTRATION_MODE: "global_code"
   ZGIE_INVITE_CODE: "CHANGE_ME"
 
+  # 企业微信群机器人 webhook（新主题发布时推送标题+跳转链接）。
+  # 留空则跳过通知，不影响发帖。群主在企业微信群里添加"群机器人"后可拿到该地址。
+  ZGIE_WECOM_WEBHOOK_URL: "CHANGE_ME"
+
 volumes:
   - volume:
       host: /var/discourse/shared/standalone
