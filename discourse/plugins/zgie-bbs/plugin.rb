@@ -82,6 +82,7 @@ after_initialize do
   require_relative "lib/zgie_bbs/privacy"
   require_relative "lib/zgie_bbs/site_configurator"
   require_relative "lib/zgie_bbs/wecom_notify"
+  require_relative "jobs/regular/zgie_notify_wecom"
 
   add_permitted_post_create_param :zgie_anonymous
   register_modifier(:posts_controller_create_user) do |user, create_params|
