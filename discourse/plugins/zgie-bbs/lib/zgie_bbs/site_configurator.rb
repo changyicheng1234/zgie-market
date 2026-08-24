@@ -25,6 +25,7 @@ module ZgieBbs
 
     def call
       configure_identity
+      configure_branding
       configure_urls
       configure_access
       configure_discussions
@@ -35,13 +36,41 @@ module ZgieBbs
     private
 
     def configure_identity
-      SiteSetting.title = fetch("ZGIE_SITE_TITLE", "智工 BBS")
+      SiteSetting.title = fetch("ZGIE_SITE_TITLE", "智工集市")
       SiteSetting.site_description =
         fetch("ZGIE_SITE_DESCRIPTION", "智能工程学院师生的邀请制交流社区")
       SiteSetting.default_locale = fetch("ZGIE_DEFAULT_LOCALE", "zh_CN")
       SiteSetting.enable_local_logins = true
       SiteSetting.enable_local_logins_via_email = true
       SiteSetting.allow_new_registrations = true
+    end
+
+    # Vectorized from a source PNG (potrace, traced per flat color layer) so
+    # it stays crisp at favicon and header sizes; the wordmark text in
+    # logo.svg is outlined to paths (Inkscape --export-text-to-path) so it
+    # renders identically regardless of the client's installed fonts.
+    # UploadCreator dedupes by sha1, so re-running this on an
+    # already-configured site is a no-op.
+    def configure_branding
+      images_dir = File.expand_path("../../assets/images", __dir__)
+      set_upload_setting(:favicon, File.join(images_dir, "favicon.svg"))
+      set_upload_setting(:logo, File.join(images_dir, "logo.svg"))
+      set_upload_setting(:logo_dark, File.join(images_dir, "logo.svg"))
+      set_upload_setting(:logo_small, File.join(images_dir, "favicon.svg"))
+    end
+
+    def set_upload_setting(setting_name, path)
+      return unless File.exist?(path)
+
+      upload =
+        UploadCreator.new(
+          File.open(path),
+          File.basename(path),
+          for_site_setting: true,
+          site_setting_name: setting_name.to_s
+        ).create_for(Discourse::SYSTEM_USER_ID)
+
+      SiteSetting.public_send("#{setting_name}=", upload) if upload.persisted?
     end
 
     def configure_urls
