@@ -2,6 +2,9 @@
 SSE_market_server/config/application.yml
 SSE_market_server/.env
 
+# HTTPS 证书私钥（ise-market.cn，腾讯云签发）——私钥绝不能进仓库
+ise-market.cn_nginx/
+
 # 依赖和构建产物
 SSE_market_client/node_modules/
 SSE_market_client/dist/
