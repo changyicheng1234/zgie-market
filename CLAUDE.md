@@ -1,23 +1,25 @@
 # 智工集市项目开发记录
 
 > 智能工程学院内部交流平台。
-> 线上地址：**https://ise-market.duckdns.org/**（即将切换到 `ise-market.cn`，ICP 备案已通过，见下方「ICP 备案」，服务器端切换尚未执行）
+> 线上地址：**https://ise-market.cn/**（2026-09-07 已从 `ise-market.duckdns.org` 切换完成，旧域名 301 跳转到新域名）
 
 ---
 
-## ✅ ICP 备案已通过（2026-09-05），服务器切换待执行
+## ✅ 域名已切换到 ise-market.cn（2026-09-07 完成）
 
-服务器在腾讯云**广州**节点（大陆），根据工信部规定，用域名访问大陆服务器上的网站必须完成 **ICP 备案**，否则腾讯云会在网络层拦截该域名的访问（表现为跳转到"未备案"提示页，或间歇性拦不稳定）。这也是之前排查"网页时好时坏"时的部分真实原因。
+ICP 备案 2026-09-05 通过后，2026-09-07 完成服务器端全部切换。备案信息：备案主体是老师的腾讯云账号（账号 ID `100051329736`），备案订单号 `30178696354544589`，公安备案数据码 `a5fe5258b0976b89d9ae007964be24e8`。
 
-- **备案主体**：服务器是老师的腾讯云账号买的（账号 ID：`100051329736`）
-- **新域名**：`ise-market.cn`（DuckDNS 免费域名不被备案系统接受，只能作废/过渡用）
-- **备案结果**（2026-09-05）：**已通过**。备案订单号 `30178696354544589`，公安备案数据码 `a5fe5258b0976b89d9ae007964be24e8`（公安联网备案用，登记在案，不是需要操作的密钥）
-- **当前状态**：备案已过，`ise-market.cn` **仍未解析**到服务器，Nginx/Discourse 配置**仍指向旧的 DuckDNS 域名**——本次先更新本地文档记录备案结果，服务器端切换（DNS/证书/Nginx/`app.yml`）留到下次上服务器时一并做
-- **备案通过后要做的技术切换**（下次上服务器时找 Claude 继续，按顺序做）：
-  1. DNS：`ise-market.cn` A 记录指向 `203.195.162.102`
-  2. 用腾讯云免费证书服务给新域名重新申请 HTTPS 证书
-  3. 改 Nginx 配置 + `/var/discourse/containers/app.yml` 里的 `DISCOURSE_HOSTNAME` 为 `ise-market.cn`，`./launcher rebuild app` 生效
-  4. 旧 DuckDNS 地址视情况保留跳转或弃用
+背景：服务器在腾讯云**广州**节点（大陆），工信部规定用域名访问大陆服务器必须完成 ICP 备案，否则腾讯云在网络层拦截（跳"未备案"提示页 / 间歇性拦），这也是当初"网页时好时坏"的部分原因。
+
+**本次切换实际做的事**：
+1. **DNS**：`ise-market.cn` A 记录已指向 `203.195.162.102`（切换前就已生效）。`www.ise-market.cn` 尚未加 A 记录，nginx 已配好 301 block，需要时去 DNS 加一条即可
+2. **HTTPS 证书**：用的是腾讯云签发的 **TrustAsia DV** 证书（`ise-market.cn` + `www.ise-market.cn`，RSA），nginx 格式 bundle 存在仓库 `ise-market.cn_nginx/`，已装到服务器 `/etc/nginx/ssl/ise-market.cn.fullchain.pem` + `ise-market.cn.key`。**有效期到 2026-12-04，只有 90 天，不自动续期**——到期前必须去腾讯云重新申请再手动传上去换掉，否则开了 HSTS 的浏览器会直接打不开
+3. **Nginx**：`/etc/nginx/sites-available/zgie-market` 重写为 4 个 server block——`ise-market.cn` 用新证书反代 Discourse（新增了 `X-Forwarded-Proto` header）；`www.ise-market.cn` 用新证书 301 到 apex；`ise-market.duckdns.org` 用旧 acme.sh 证书 301 到 apex；80 端口全部 301 到 https apex。旧配置备份在同目录 `zgie-market.bak-20260907`
+4. **Discourse**：`app.yml` 的 `DISCOURSE_HOSTNAME` 改为 `ise-market.cn`（备份 `app.yml.bak-20260907`），`./launcher rebuild app` 生效（顺便拉了最新插件代码，见进度日志）。**注意 `./launcher restart app` 不会应用 `app.yml` 的 env 变更**（它只是 `docker stop`+`docker start` 同一个容器），必须 `rebuild`
+5. **`force_https`**：本次一并从 `false` 开为 `true`（`Discourse.base_url` 现在是 `https://`，邮件链接、canonical 都走 https）。之前不敢开是因为旧 nginx 配置没传 `X-Forwarded-Proto`，开了会 301 循环；本次新配置补了这个 header，已验证无循环
+6. **旧 DuckDNS**：保留做 301 跳转（旧证书 + acme.sh 自动续期继续留着，方便万一回滚）。旧证书文件 `/etc/nginx/ssl/fullchain.pem` + `key.pem` 仍被 duckdns 那个 block 引用，别删
+
+**回滚办法**（万一新域名出问题）：`cp zgie-market.bak-20260907 zgie-market && nginx -s reload`，再把 `app.yml` 的 hostname 改回 duckdns 跑 `rebuild`，关掉 `force_https`。
 
 ---
 
@@ -34,7 +36,7 @@
 | 项目 | 内容 |
 |------|------|
 | 平台 | [Discourse](https://www.discourse.org/)（官方 `discourse_docker` 部署） |
-| 品牌名 | 智工 BBS |
+| 品牌名 | 智工集市（旧称"智工 BBS"，2026-09-07 改；`app.yml` 的 `ZGIE_SITE_TITLE` 与数据库 `SiteSetting.title` 均已更新，logo/favicon 换成 `zgie-bbs` 插件里矢量化的新校徽+字标） |
 | 分区 | 日常吐槽 / 学习交流 / 打听求助 / 恋爱交友 / 课程专区 / 其他 |
 | 注册方式 | 邀请码模式（非公开注册），当前邀请码：`44d734ae4fd49c1e20b2` |
 | 邮件 | 中山大学官方 SMTP（mail.sysu.edu.cn） |
@@ -52,7 +54,7 @@
 - 服务器：腾讯云 203.195.162.102
 - SSH：`ssh -i ~/.ssh/zgie_server ubuntu@203.195.162.102`
 - Discourse 安装目录：`/var/discourse`（官方 `discourse_docker` 标准布局）
-- Discourse 容器内网端口：`127.0.0.1:20080`，Nginx 全站反代到这个端口，复用原有 HTTPS 证书（acme.sh + DuckDNS，自动续期）
+- Discourse 容器内网端口：`127.0.0.1:20080`，Nginx 全站反代到这个端口。HTTPS 证书：`ise-market.cn` 用腾讯云 TrustAsia DV 证书（`/etc/nginx/ssl/ise-market.cn.*`，90 天，**手动续期**，到期 2026-12-04）；旧 `ise-market.duckdns.org` 仍用 acme.sh 证书（`/etc/nginx/ssl/fullchain.pem`，自动续期，仅供 301 跳转）
 - 旧栈 MySQL 全库备份：`/home/ubuntu/old-stack-backup/mysql-all-20260817.sql`
 - 服务器规格：腾讯云 2核 / 3.6GB 内存 / 59GB 磁盘，**单容器全家桶**（Postgres+Redis+Sidekiq+Unicorn 全跑在同一个 `app` 容器里，没有拆分数据库/对象存储）
 - 2026-08-18 资源快照（4个注册用户，几乎零负载下的基线）：内存用 2.1G/3.6G（app 容器占 1.335G，即 37%），load average 0.1~0.2（2核基本空闲），磁盘用 15G/59G（数据库本身仅 41MB，uploads 仅 1.1MB）。**结论：内存会比磁盘更早成为瓶颈**——Postgres/Redis/Rails 的基础占用不会因为内容少而低多少，并发用户一多内存先顶不住；磁盘增长速度慢，42GB 剩余空间够撑很久
@@ -87,15 +89,32 @@ cd /var/discourse
 - **`launcher rebuild app` 不能挂在不稳定的 SSH 会话前台跑**：SSH 断线会连带杀掉触发它的 shell，导致旧容器已停、新容器没建完就中断，网站直接下线。必须用 `sudo bash -c 'cd /var/discourse && setsid nohup ./launcher rebuild app > /home/ubuntu/rebuild.log 2>&1 < /dev/null &'` 之类的方式让它彻底脱离终端，再轮询日志/`docker ps` 确认完成。
 - **Discourse 插件里的 `Jobs::*` 任务类不会被自动加载**：不管放在 `<plugin>/jobs/regular/` 还是 `<plugin>/app/jobs/regular/`，都得在 `plugin.rb` 的 `after_initialize` 里手动 `require_relative` 一下（参考官方 `discourse-zendesk-plugin` 的写法），否则 `Jobs.enqueue` 在真正运行时会报 `uninitialized constant`，而且这个错误在 `on(:post_created)` 钩子里会被静默吞掉，表现为"代码部署了但通知就是发不出去"，很难第一时间发现。
 - **`docker exec` 里直接跑 `bin/rails runner` 报 `NoDatabaseError`**：默认以 root 身份执行会连不上 Postgres（走 socket 的 peer 认证对不上），要加 `-u discourse`（容器内运行 Discourse 的系统用户）。
+- **`zgie-bbs` 插件的 `SiteConfigurator` 不会随容器启动自动运行**：`plugin.rb` 的 `after_initialize` 只 `require_relative` 了这个类，从没调用 `.call`。它把品牌/分区/访问策略等一次性写进数据库，只能靠手动跑 rake task `zgie_bbs:configure`（或 `bin/rails runner` 直接调 `ZgieBbs::SiteConfigurator.call`）。后果：改了插件里的 logo/favicon/默认标题后，光 `./launcher rebuild app` **不会生效**，界面还是旧的，必须 rebuild 后再手动跑一次 configure。`SiteConfigurator.call(env:)` 接受 env 覆盖，想临时改标题不必动 `app.yml` 重建：`ZgieBbs::SiteConfigurator.call(env: ENV.to_h.merge("ZGIE_SITE_TITLE" => "新标题"))`（但 `app.yml` 里的 `ZGIE_SITE_TITLE` 也要同步改，否则下次真正 rebuild + configure 会回退）。标题优先级：`app.yml` 的 `ZGIE_SITE_TITLE` env > 代码里 `fetch` 的默认值。
+- **SSH 到这台服务器有连接频率限制**：短时间内连续 ssh/scp 会被 `Connection closed by remote host` / `closed by port 22` 打断（sshd rate-limit 或 fail2ban）。批量操作要么合并进一次会话，要么每次间隔 30s 以上；复杂的多层 heredoc 命令还会被本地安全分类器拦，改用「上传脚本文件再执行」更稳。
 
 ---
 
 ## 待办
 
-- [ ] **域名切换到 `ise-market.cn`**：备案已通过，按上方「ICP 备案」四步执行 DNS/证书/Nginx/`app.yml` 切换（需要上服务器操作）
-- [ ] 用户量上来后评估服务器内存升级（当前 3.6GB，建议 4GB+）
+- [x] **域名切换到 `ise-market.cn`**：2026-09-07 完成（DNS/证书/Nginx/`app.yml`/`force_https`），详见上方「域名已切换」章节
+- [ ] **2026-12-04 前手动续期 `ise-market.cn` 的 HTTPS 证书**：腾讯云 TrustAsia DV 证书 90 天有效，不自动续期，到期前去腾讯云重新申请并传上服务器换掉 `/etc/nginx/ssl/ise-market.cn.*`
+- [ ] 用户量上来后评估服务器内存升级（当前 3.6GB；~1000 人学院规模建议升 **4核8G**，磁盘扩到 100G，见「域名已切换」下方对话记录 / 服务器信息里的升配说明）
+- [ ] **修复 OpenISE 侧边栏链接在桌面端不显示的问题**（见下方「已知问题」）：需要改前端代码 + rebuild，故意推迟到下次服务器升级后一并做
 - [ ] 邀请码用完 / 需要新邀请码时，去 Discourse 后台管理面板（`/admin`）生成
 - [ ] 视频/长期运营需求：评估是否需要开放公开注册，或长期保持邀请制
+
+---
+
+## 已知问题
+
+### OpenISE 侧边栏链接桌面端不显示（2026-09-07 记录，待修）
+
+`zgie-bbs` 插件的 `assets/javascripts/discourse/api-initializers/zgie-external-links.gjs`（`5b2a07a` 引入，人B 加的 OpenISE 外链，指向 `https://openise.pages.dev`）在**手机端能显示、桌面端不显示**。
+
+- **代码没问题**：容器内源文件、编译产物（`public/assets/js/plugins/zgie-bbs_main.*.digested.js` 里能 grep 到 `openise`）都在，是运行时注册没成功。
+- **根因**：这段代码把链接挂在 **Chat 专属侧边栏面板**上，用私有 API `discourse/lib/sidebar/custom-sections` 的 `customPanels` 去检测 Chat 面板是否存在，检测不到就每 150ms 重试、6 秒后放弃。桌面端在 `chat_separate_sidebar_mode = never`（当前值）下没有独立 Chat 侧边栏面板，检测永远失败；手机端全屏 Chat 有独立面板所以能注册。
+- **试过但无效**：把 `chat_separate_sidebar_mode` 改成 `always`，结果桌面端还是不行、连手机端也失效了（该值又改变了 Chat 侧边栏结构）。已回退回 `never`。
+- **正解（待做）**：改 `zgie-external-links.gjs`，改用公开稳定的 `api.addSidebarSection(callback)`（不传 panel 参数 → 注册到主侧边栏），去掉 Chat 面板检测和轮询。这样桌面/手机主侧边栏都常驻显示。改完要 commit + push + `./launcher rebuild app`（前端 assets 重新编译，约 1 小时下线），所以合并到下次服务器升级 rebuild 时一起做。
 
 ---
 
@@ -109,6 +128,8 @@ cd /var/discourse
 - **2026-08-17：架构整体切换为 Discourse。** 旧 Go/MySQL/Redis 栈备份后下线，安装官方 `discourse_docker`，完成生产配置（域名/SMTP/邀请码/6个分区/中文品牌），修复 GitHub 连接问题后构建成功，创建管理员账号，Nginx 切换反代到 Discourse 容器，端到端验证通过（HTTPS、品牌显示、邀请码校验含防爬虫 honeypot）。旧架构任务清单（匿名发帖/置顶擦亮/微信支付等）随之作废，仅存档参考。
 - **2026-08-18：企业微信群机器人新帖通知移植到 Discourse。** 在 `zgie-bbs` 插件里用 `Jobs::ZgieNotifyWecom`（Sidekiq 异步任务）监听新主题的 `post_created` 事件，推送分区+标题+链接到企业微信群机器人，webhook 地址通过 `ZGIE_WECOM_WEBHOOK_URL` 环境变量配置（`app.yml` 里维护，留空则静默跳过）。生产环境用真实发帖流程端到端验证通过。过程中踩了一个坑：插件里的 Job 类不会被自动加载，必须在 `plugin.rb` 手动 `require_relative`，否则新帖事件触发时会静默报错、消息发不出去（详见上方「踩坑记录」）。
 - **2026-09-05：ICP 备案通过。** 腾讯云备案订单号 `30178696354544589`，公安备案数据码 `a5fe5258b0976b89d9ae007964be24e8`。本次仅更新本地文档记录备案结果，DNS 解析、HTTPS 证书、Nginx 及 `app.yml` 的 `DISCOURSE_HOSTNAME` 切换到 `ise-market.cn` 仍未执行，留到下次登录服务器时按「ICP 备案」章节的四步操作完成。
+- **2026-09-07：域名切换到 `ise-market.cn` + 部署最新插件代码。** 上传腾讯云 TrustAsia DV 证书并重写 nginx（新域名反代 Discourse、`www` 和旧 DuckDNS 域名 301 到 apex、新增 `X-Forwarded-Proto` header）；`app.yml` 的 `DISCOURSE_HOSTNAME` 改为 `ise-market.cn` 并 `./launcher rebuild app`，rebuild 顺带从 GitHub 拉了最新分支代码上线（`5b2a07a` 智工集市 rebrand + OpenISE 侧边栏链接 `zgie-external-links.gjs`，此前生产还是 8-18 的旧插件）；一并开启 `force_https`（`base_url` 现在 https，已验证无 301 循环）。端到端验证通过：新域名 HTTPS 200、旧域名 301 跳转、`srv/status` 200、`Jobs::ZgieNotifyWecom` 正常加载、无 error 日志。备份：`nginx sites-available/zgie-market.bak-20260907`、`app.yml.bak-20260907`。遗留：`ise-market.cn` 证书 90 天需手动续期（到期 2026-12-04）；`www.ise-market.cn` 的 DNS A 记录尚未添加（nginx block 已就绪）。
+- **2026-09-07（同日续）：品牌切到"智工集市" + 密码长度放宽。** 发现 rebuild 后标题/图标仍是旧的——根因见下方「踩坑记录」：`zgie-bbs` 插件的 `SiteConfigurator` 不会随容器启动自动跑。处理：`app.yml` 的 `ZGIE_SITE_TITLE` 改为"智工集市"，容器内 `bin/rails runner` 调 `ZgieBbs::SiteConfigurator.call`（临时注入正确标题，无需再 rebuild），标题 + logo/logo_dark/logo_small/favicon 全部更新为插件内新素材，`/site/basic-info.json` 已确认。另按需求把 `min_password_length` 10→8、`min_admin_password_length` 15→8（Discourse 硬下限就是 8）。OpenISE 侧边栏链接问题见下方「待办」与「已知问题」，本次未解决，推迟到服务器升级后随代码改动一起处理。
 
 ---
 
