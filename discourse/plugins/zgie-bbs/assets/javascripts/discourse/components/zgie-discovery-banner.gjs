@@ -18,11 +18,16 @@ export default class ZgieDiscoveryBanner extends Component {
   get enabled() {
     return (
       this.siteSettings.zgie_bbs_branded_layout &&
+      (!this.site.desktopView ||
+        this.router.currentRouteName === "discovery.custom") &&
       (this.currentUser || !this.siteSettings.login_required)
     );
   }
 
   get isHomepage() {
+    if (this.site.desktopView) {
+      return this.router.currentRouteName === "discovery.custom";
+    }
     return ["discovery.latest", "discovery.categories"].includes(
       this.router.currentRouteName
     );

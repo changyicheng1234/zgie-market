@@ -15,13 +15,13 @@ RSpec.describe "Explore branded layout" do
   end
 
   it "lets a member explore a category and search from the welcome banner" do
-    visit("/latest")
+    visit("/custom")
     expect(banner).to have_branded_layout
     expect(banner).to have_category(category)
     banner.select_category(category)
     expect(page).to have_current_path("/c/#{category.slug}/#{category.id}")
 
-    visit("/latest")
+    visit("/custom")
     banner.search("campus")
     expect(page).to have_current_path("/search?q=campus")
     expect(banner).to have_branded_layout

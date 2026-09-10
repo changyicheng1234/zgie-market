@@ -3,7 +3,13 @@ zh_CN:
     zgie_bbs:
       campus:
         categories: "校园集市"
-        hot: "热门主题"
+        hot: "热门帖子"
+        home: "首页"
+        posts: "帖子"
+        my_posts: "我的帖子"
+        my_messages: "我的消息"
+        latest_posts: "最新讨论"
+        feed_error: "帖子暂时无法加载，请重试。"
         show_all: "显示全部"
         hot_description: "正在热议 · 热门 5 帖"
         loading: "正在加载热榜…"

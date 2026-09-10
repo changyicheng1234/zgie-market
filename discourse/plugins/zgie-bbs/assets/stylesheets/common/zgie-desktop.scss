@@ -5,6 +5,19 @@
 
 @media (width >= 768px) {
   body.zgie-branded {
+    .zgie-home {
+      --zgie-home-radius: 16px;
+      --zgie-home-card: light-dark(var(--secondary), #1a1a1a);
+      --zgie-surface: var(--zgie-home-card);
+      --d-content-background: var(--zgie-home-card);
+      --topic-list-item-background-color--visited: var(--zgie-home-card);
+    }
+
+    .zgie-home :is(.zgie-home__feed, .zgie-hot-topics) {
+      border-radius: var(--zgie-home-radius);
+      background: var(--zgie-home-card);
+    }
+
     --zgie-accent: color-mix(in srgb, #005a9c 70%, var(--primary));
     --zgie-accent-soft: color-mix(in srgb, #005a9c 12%, var(--secondary));
     --zgie-surface: color-mix(in srgb, var(--secondary) 97%, #005a9c);
@@ -92,7 +105,8 @@
     }
 
     // Only replace the desktop category shortcuts; no categories are deleted.
-    .sidebar-section[data-section-name="categories"] {
+    .sidebar-section[data-section-name="categories"],
+    .sidebar-section[data-section-name="community"] {
       display: none;
     }
 
@@ -101,7 +115,7 @@
       flex-direction: column;
     }
 
-    .sidebar-section[data-section-name="community"] {
+    .sidebar-section[data-section-name="zgie-navigation"] {
       order: -2;
     }
 
@@ -217,28 +231,81 @@
   }
 }
 
-@media (width >= 1200px) {
-  body.zgie-branded:has(.zgie-hot-topics) {
-    .zgie-hot-topics {
-      float: right;
-      width: 32%;
-      margin: 16px 0 24px 24px;
+@media (width >= 768px) {
+  body.zgie-branded {
+    .zgie-home__heading {
+      margin: 0 0 18px;
+      font-size: 23px;
     }
 
-    .list-container {
-      width: calc(68% - 24px);
-      margin-inline: 0;
+    .zgie-home__grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 20px;
+      align-items: start;
     }
 
-    #main-outlet::after {
-      content: "";
-      display: block;
-      clear: both;
+    .zgie-home__feed {
+      min-width: 0;
+      overflow: hidden;
+      border-radius: 16px;
+      background: var(--secondary);
     }
 
-    .topic-list .posters {
+    .zgie-home__status {
+      padding: 24px;
+    }
+
+    .zgie-home .zgie-hot-topics {
+      margin: 0;
+    }
+
+    .zgie-home .topic-list {
+      margin: 0;
+      width: 100%;
+    }
+
+    .zgie-home .topic-list th {
+      height: 54px;
+      box-sizing: border-box;
+    }
+
+    .zgie-home .topic-list :is(td, th):first-child {
+      padding-inline-start: 24px;
+    }
+
+    .zgie-home .topic-list :is(td, th):last-child {
+      padding-inline-end: 24px;
+    }
+
+    .zgie-home .topic-list .topic-excerpt {
       display: none;
     }
+
+    .zgie-home .topic-list .num {
+      width: auto;
+    }
+
+    .zgie-home__all {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 18px 24px;
+      color: var(--zgie-accent);
+      font-weight: 600;
+      border-top: 1px solid var(--zgie-border);
+
+      &:hover {
+        background: var(--zgie-accent-soft);
+      }
+    }
+  }
+}
+
+@media (width >= 1200px) {
+  body.zgie-branded .zgie-home__grid {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   }
 }
 

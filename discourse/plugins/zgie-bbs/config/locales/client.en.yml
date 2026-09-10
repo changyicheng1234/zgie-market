@@ -4,6 +4,12 @@ en:
       campus:
         categories: "Campus marketplace"
         hot: "Trending topics"
+        home: "Home"
+        posts: "Posts"
+        my_posts: "My posts"
+        my_messages: "My messages"
+        latest_posts: "Latest discussions"
+        feed_error: "Posts could not be loaded. Please try again."
         show_all: "Show all"
         hot_description: "Most discussed · Top 5 topics"
         loading: "Loading trending topics…"
