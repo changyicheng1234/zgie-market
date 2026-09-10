@@ -77,19 +77,25 @@
       }
 
       &__categories {
-        grid-template-columns: repeat(5, minmax(0, 1fr));
-        gap: 10px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
       }
 
       &__category {
-        flex-direction: column;
-        justify-content: center;
-        gap: 9px;
-        font-size: 13px;
-        padding: 16px 8px;
+        flex-direction: row;
+        justify-content: flex-start;
+        min-height: 112px;
+        box-sizing: border-box;
+        gap: 16px;
+        font-size: 16px;
+        padding: 24px 20px;
       }
 
       &__category-icon {
+        width: 48px;
+        height: 48px;
+        flex-shrink: 0;
+        font-size: 24px;
         background: var(--zgie-accent-soft);
         color: var(--zgie-accent);
       }
@@ -312,6 +318,14 @@
 @media (768px <= width < 1000px) {
   body.zgie-branded .zgie-banner__categories {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  body.zgie-branded .zgie-banner__category {
+    flex-direction: column;
+    justify-content: center;
+    padding: 18px 10px;
+    font-size: 14px;
+    gap: 10px;
   }
 }
 

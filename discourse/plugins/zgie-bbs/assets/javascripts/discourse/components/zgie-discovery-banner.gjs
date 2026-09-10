@@ -48,11 +48,13 @@ export default class ZgieDiscoveryBanner extends Component {
 
   get categories() {
     if (this.site.desktopView) {
-      return campusCategories(this.site).map((category) => ({
-        name: category.name,
-        href: category.url,
-        icon: "compass",
-      }));
+      return campusCategories(this.site)
+        .slice(0, 3)
+        .map((category) => ({
+          name: category.name,
+          href: category.url,
+          icon: "compass",
+        }));
     }
     const available = this.site.categories.filter(
       (category) =>
