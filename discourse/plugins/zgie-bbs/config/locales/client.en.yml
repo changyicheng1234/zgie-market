@@ -1,6 +1,17 @@
 en:
   js:
     zgie_bbs:
+      campus:
+        categories: "Campus marketplace"
+        hot: "Trending on campus"
+        hot_description: "Most discussed · Top 5 topics"
+        loading: "Loading trending topics…"
+        error: "Trending topics are unavailable"
+        retry: "Retry"
+        empty: "No campus topics yet. Start a conversation."
+        replies:
+          one: "%{count} reply"
+          other: "%{count} replies"
       banner:
         eyebrow: "CAMPUS LIFE · BETTER TOGETHER"
         welcome: "Welcome to %{site}"

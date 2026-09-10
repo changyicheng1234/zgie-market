@@ -1,6 +1,15 @@
 zh_CN:
   js:
     zgie_bbs:
+      campus:
+        categories: "校园集市"
+        hot: "校园热榜"
+        hot_description: "正在热议 · 热门 5 帖"
+        loading: "正在加载热榜…"
+        error: "热榜暂时无法加载"
+        retry: "重试"
+        empty: "还没有校园话题，来分享第一帖吧。"
+        replies: "%{count} 回复"
       banner:
         eyebrow: "校园生活 · 在这里相遇"
         welcome: "欢迎来到%{site}"

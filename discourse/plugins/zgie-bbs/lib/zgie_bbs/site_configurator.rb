@@ -7,9 +7,36 @@ module ZgieBbs
       { name: "学习交流", slug: "study", color: "0B6CF0" },
       { name: "打听求助", slug: "help", color: "2F855A" },
       { name: "恋爱交友", slug: "social", color: "D53F8C" },
-      { name: "课程专区", slug: "courses", color: "3A4B8F" },
+      { name: "课程经验分享", slug: "courses", color: "1665A8" },
+      { name: "实习推荐", slug: "internships", color: "005A9C" },
+      { name: "考研保研分享", slug: "postgraduate", color: "3276AF" },
+      { name: "二手交易", slug: "second-hand", color: "358A91" },
       { name: "其他", slug: "other", color: "718096" }
     ].freeze
+
+    CAMPUS_SLUGS = %w[internships postgraduate second-hand courses daily].freeze
+
+    # Can be run separately without reapplying authentication or site settings.
+    def self.configure_campus_categories(output: $stdout)
+      CATEGORIES
+        .select { |category| CAMPUS_SLUGS.include?(category[:slug]) }
+        .each do |attributes|
+          category =
+            Category.find_or_initialize_by(slug: attributes.fetch(:slug))
+          if category.new_record?
+            category.assign_attributes(
+              attributes.merge(
+                text_color: "FFFFFF",
+                user: Discourse.system_user
+              )
+            )
+            category.save!
+            output.puts "Created category: #{category.name}"
+          elsif category.slug == "courses" && category.name == "课程专区"
+            category.update!(name: attributes.fetch(:name))
+          end
+        end
+    end
 
     TRUE_VALUES = %w[1 true yes on].freeze
     REGISTRATION_MODES = %w[global_code invite_links].freeze

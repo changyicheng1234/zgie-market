@@ -122,3 +122,5 @@ ZGIE_INVITE_CODE=
 当前固定的上游提交、镜像、测试、HTTP 和注册验证结果见 [`../docs/discourse-rebuild/VALIDATION.md`](../docs/discourse-rebuild/VALIDATION.md)。
 
 移动底栏、Meta 风格布局、开关与响应式验证记录见 [响应式界面说明](../docs/discourse-rebuild/RESPONSIVE-DESIGN.md)。
+
+桌面工科蓝配色、校园分类初始化与热门侧栏见 [桌面校园主题](../docs/discourse-rebuild/DESKTOP-CAMPUS.md)。

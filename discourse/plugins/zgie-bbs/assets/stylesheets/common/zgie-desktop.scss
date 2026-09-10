@@ -1,0 +1,226 @@
+// Desktop branch: preserve the mobile visual layer below 768px.
+.zgie-hot-topics {
+  display: none;
+}
+
+@media (width >= 768px) {
+  body.zgie-branded {
+    --zgie-accent: color-mix(in srgb, #005a9c 70%, var(--primary));
+    --zgie-accent-soft: color-mix(in srgb, #005a9c 12%, var(--secondary));
+    --zgie-surface: color-mix(in srgb, var(--secondary) 97%, #005a9c);
+    --zgie-border: color-mix(in srgb, var(--primary) 12%, var(--secondary));
+    background:
+      radial-gradient(
+        ellipse at 85% 0%,
+        color-mix(in srgb, #207cb7 18%, transparent),
+        transparent 65%
+      ),
+      linear-gradient(180deg, var(--zgie-accent-soft), var(--secondary) 950px);
+    background-attachment: fixed;
+
+    #main-outlet {
+      max-width: 1320px;
+      background: var(--zgie-surface);
+    }
+
+    .d-header {
+      background: var(--zgie-surface);
+    }
+
+    .btn-primary {
+      --d-button-background: #005a9c;
+      background: #005a9c;
+
+      &:hover,
+      &:focus-visible {
+        background: #004578;
+      }
+    }
+
+    .topic-list .topic-list-item:hover td {
+      background: var(--zgie-accent-soft);
+    }
+
+    .zgie-banner {
+      background:
+        radial-gradient(
+          ellipse at 0% 0%,
+          color-mix(in srgb, #4c9fda 24%, transparent),
+          transparent 65%
+        ),
+        radial-gradient(
+          ellipse at 100% 10%,
+          color-mix(in srgb, #70c6d4 16%, transparent),
+          transparent 55%
+        ),
+        var(--zgie-accent-soft);
+
+      &::before {
+        border-color: color-mix(in srgb, #247eb8 18%, transparent);
+      }
+
+      &::after {
+        border-color: color-mix(in srgb, #378ea8 18%, transparent);
+      }
+
+      &__categories {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      &__category {
+        flex-direction: column;
+        justify-content: center;
+        gap: 9px;
+        font-size: 13px;
+        padding: 16px 8px;
+      }
+
+      &__category-icon {
+        background: var(--zgie-accent-soft);
+        color: var(--zgie-accent);
+      }
+
+      &__category:nth-child(n) .zgie-banner__category-icon {
+        background: var(--zgie-accent-soft);
+        color: var(--zgie-accent);
+      }
+
+      &__arrow {
+        display: none;
+      }
+    }
+
+    // Only replace the desktop category shortcuts; no categories are deleted.
+    .sidebar-section[data-section-name="categories"] {
+      display: none;
+    }
+
+    .sidebar-sections {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-section[data-section-name="community"] {
+      order: -2;
+    }
+
+    .sidebar-section[data-section-name="zgie-campus"] {
+      order: -1;
+    }
+
+    .zgie-hot-topics {
+      display: block;
+      box-sizing: border-box;
+      padding: 20px;
+      border: 1px solid var(--zgie-border);
+      border-radius: 14px;
+      background: var(--secondary);
+      margin: 16px 0 24px;
+
+      h2 {
+        margin: 0;
+        font-size: 17px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      h2 .d-icon {
+        color: var(--zgie-accent);
+      }
+
+      &__description {
+        margin: 8px 0 16px;
+        color: var(--primary-high);
+        font-size: 12px;
+      }
+
+      &__list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      li {
+        display: flex;
+        gap: 10px;
+        padding: 14px 0;
+        border-top: 1px solid var(--zgie-border);
+      }
+
+      li > div {
+        min-width: 0;
+      }
+
+      li a {
+        color: var(--primary);
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
+      }
+
+      li a:hover {
+        color: var(--zgie-accent);
+      }
+
+      li p {
+        font-size: 11px;
+        line-height: 1.6;
+        margin: 6px 0 0;
+        color: var(--primary-high);
+      }
+
+      &__rank {
+        color: var(--zgie-accent);
+        font-size: 16px;
+        font-weight: 700;
+        min-width: 14px;
+        line-height: 1.6;
+      }
+
+      &__empty {
+        color: var(--primary-high);
+        font-size: 13px;
+      }
+    }
+  }
+}
+
+@media (width >= 1200px) {
+  body.zgie-branded:has(.zgie-hot-topics) {
+    .zgie-hot-topics {
+      float: right;
+      width: 244px;
+      margin: 16px 0 24px 24px;
+    }
+
+    .list-container {
+      width: calc(100% - 268px);
+      margin-inline: 0;
+    }
+
+    #main-outlet::after {
+      content: "";
+      display: block;
+      clear: both;
+    }
+
+    .topic-list .posters {
+      display: none;
+    }
+  }
+}
+
+@media (768px <= width < 1000px) {
+  body.zgie-branded .zgie-banner__categories {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media print {
+  .zgie-hot-topics {
+    display: none !important;
+  }
+}

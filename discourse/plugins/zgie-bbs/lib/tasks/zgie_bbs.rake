@@ -11,3 +11,8 @@ task "zgie_bbs:seed_demo" => %w[environment zgie_bbs:configure] do
   require_relative "../zgie_bbs/demo_seeder"
   ZgieBbs::DemoSeeder.call
 end
+
+desc "Create campus categories without changing site or authentication settings"
+task "zgie_bbs:configure_campus_categories" => :environment do
+  ZgieBbs::SiteConfigurator.configure_campus_categories
+end

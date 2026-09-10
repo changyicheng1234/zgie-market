@@ -12,6 +12,7 @@ enabled_site_setting :zgie_bbs_enabled
 register_asset "stylesheets/common/zgie-bbs.scss"
 register_asset "stylesheets/common/zgie-mobile.scss"
 register_asset "stylesheets/common/zgie-branded.scss"
+register_asset "stylesheets/common/zgie-desktop.scss"
 register_svg_icon "fire"
 register_svg_icon "book-open"
 register_svg_icon "compass"
@@ -76,6 +77,8 @@ module ::ZgieBbs
   end
 end
 
+require_relative "lib/zgie_bbs/engine"
+
 on(:post_created) do |post, options, author|
   ZgieBbs::PerPostAnonymity.clear_master_draft!(post, options, author)
   Jobs.enqueue(:zgie_notify_wecom, post_id: post.id)
@@ -86,6 +89,11 @@ after_initialize do
   require_relative "lib/zgie_bbs/per_post_anonymity"
   require_relative "lib/zgie_bbs/privacy"
   require_relative "lib/zgie_bbs/site_configurator"
+  require_relative "lib/zgie_bbs/campus_topic_query"
+  require_relative "app/controllers/zgie_bbs/hot_topics_controller"
+  Discourse::Application.routes.append do
+    mount ZgieBbs::Engine, at: "/zgie-bbs"
+  end
   require_relative "lib/zgie_bbs/wecom_notify"
   require_relative "jobs/regular/zgie_notify_wecom"
 

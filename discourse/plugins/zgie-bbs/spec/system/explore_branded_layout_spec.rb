@@ -2,7 +2,9 @@
 
 RSpec.describe "Explore branded layout" do
   fab!(:user)
-  fab!(:category) { Fabricate(:category, name: "Campus study", slug: "study") }
+  fab!(:category) do
+    Fabricate(:category, name: "Campus study", slug: "courses")
+  end
   let(:banner) { PageObjects::Components::ZgieDiscoveryBanner.new }
 
   before do

@@ -3,6 +3,7 @@ import { service } from "@ember/service";
 import getURL from "discourse/lib/get-url";
 import dIcon from "discourse/ui-kit/helpers/d-icon";
 import { i18n } from "discourse-i18n";
+import { campusCategories } from "../lib/zgie-campus-categories";
 
 export default class ZgieDiscoveryBanner extends Component {
   @service currentUser;
@@ -41,6 +42,13 @@ export default class ZgieDiscoveryBanner extends Component {
   }
 
   get categories() {
+    if (this.site.desktopView) {
+      return campusCategories(this.site).map((category) => ({
+        name: category.name,
+        href: category.url,
+        icon: "compass",
+      }));
+    }
     const available = this.site.categories.filter(
       (category) =>
         !category.parent_category_id &&

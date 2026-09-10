@@ -1,6 +1,24 @@
 # frozen_string_literal: true
 
 RSpec.describe ZgieBbs::SiteConfigurator do
+  describe ".configure_campus_categories" do
+    it "preserves category IDs and custom names without changing authentication settings" do
+      courses = Fabricate(:category, slug: "courses", name: "课程专区")
+      daily = Fabricate(:category, slug: "daily", name: "校园日记")
+      SiteSetting.login_required = false
+      SiteSetting.invite_only = false
+      described_class.configure_campus_categories(output: StringIO.new)
+      expect(courses.reload.name).to eq("课程经验分享")
+      expect(daily.reload.name).to eq("校园日记")
+      expect(Category.where(slug: described_class::CAMPUS_SLUGS).count).to eq(5)
+      expect {
+        described_class.configure_campus_categories(output: StringIO.new)
+      }.not_to change(Category, :count)
+      expect(SiteSetting.login_required).to eq(false)
+      expect(SiteSetting.invite_only).to eq(false)
+    end
+  end
+
   let(:env) do
     {
       "ZGIE_SITE_TITLE" => "智工测试站",
