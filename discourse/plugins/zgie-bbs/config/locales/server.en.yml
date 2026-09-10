@@ -1,3 +1,4 @@
 en:
   site_settings:
     zgie_bbs_enabled: "Enable ZGIE BBS branding and site configuration tasks"
+    zgie_bbs_mobile_navigation: "Show Home, Hot, Messages and Profile tabs on mobile screens"

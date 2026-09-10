@@ -1,6 +1,13 @@
 en:
   js:
     zgie_bbs:
+      navigation:
+        label: "Main navigation"
+        home: "Home"
+        hot: "Hot"
+        messages: "Messages"
+        profile: "Profile"
+        unread: "Unread messages"
       anonymous_author: "Anonymous user"
       composer:
         anonymous_topic: "Post anonymously"

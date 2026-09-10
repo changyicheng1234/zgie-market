@@ -1,6 +1,13 @@
 zh_CN:
   js:
     zgie_bbs:
+      navigation:
+        label: "主要导航"
+        home: "主页"
+        hot: "热帖"
+        messages: "私聊"
+        profile: "个人"
+        unread: "有未读消息"
       anonymous_author: "匿名用户"
       composer:
         anonymous_topic: "匿名发帖"

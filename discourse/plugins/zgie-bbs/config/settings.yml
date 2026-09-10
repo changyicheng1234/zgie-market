@@ -2,3 +2,6 @@ plugins:
   zgie_bbs_enabled:
     default: true
     client: true
+  zgie_bbs_mobile_navigation:
+    default: true
+    client: true

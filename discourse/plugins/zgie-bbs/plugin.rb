@@ -10,6 +10,8 @@
 enabled_site_setting :zgie_bbs_enabled
 
 register_asset "stylesheets/common/zgie-bbs.scss"
+register_asset "stylesheets/common/zgie-mobile.scss"
+register_svg_icon "fire"
 
 module ::ZgieBbs
   PLUGIN_NAME = "zgie-bbs"
