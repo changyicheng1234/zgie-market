@@ -1,6 +1,14 @@
 en:
   js:
     zgie_bbs:
+      banner:
+        eyebrow: "CAMPUS LIFE · BETTER TOGETHER"
+        welcome: "Welcome to %{site}"
+        description: "Share your day, exchange ideas, and find your people."
+        discussions: "Discover what's happening"
+        search: "Search topics, questions and experiences"
+        submit: "Search the community"
+        all_categories: "Explore all categories"
       navigation:
         label: "Main navigation"
         home: "Home"

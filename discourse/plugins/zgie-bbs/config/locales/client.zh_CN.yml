@@ -1,6 +1,14 @@
 zh_CN:
   js:
     zgie_bbs:
+      banner:
+        eyebrow: "校园生活 · 在这里相遇"
+        welcome: "欢迎来到%{site}"
+        description: "分享日常，交流所学，找到与你同频的人。"
+        discussions: "发现社区里的新鲜事"
+        search: "搜索话题、问题与经验"
+        submit: "搜索社区"
+        all_categories: "探索全部分区"
       navigation:
         label: "主要导航"
         home: "主页"

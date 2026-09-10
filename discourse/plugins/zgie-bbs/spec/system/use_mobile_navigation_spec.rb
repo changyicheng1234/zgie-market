@@ -66,4 +66,13 @@ RSpec.describe "Use mobile navigation" do
     expect(navigation).to have_active_item("messages")
     expect(navigation).to have_no_horizontal_overflow
   end
+
+  it "keeps nested topic reply controls and reading progress above the tabs",
+     mobile: true do
+    SiteSetting.nested_replies_enabled = true
+    SiteSetting.nested_replies_default = true
+    PageObjects::Pages::NestedView.new.visit_nested(topic)
+    expect(navigation).to have_visible_navigation
+    expect(navigation).to have_clear_topic_actions
+  end
 end

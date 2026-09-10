@@ -5,3 +5,6 @@ plugins:
   zgie_bbs_mobile_navigation:
     default: true
     client: true
+  zgie_bbs_branded_layout:
+    default: true
+    client: true

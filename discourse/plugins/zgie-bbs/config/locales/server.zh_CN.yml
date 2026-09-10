@@ -1,4 +1,5 @@
 zh_CN:
   site_settings:
+    zgie_bbs_branded_layout: "启用校园搜索横幅与 Meta 风格的整体界面"
     zgie_bbs_mobile_navigation: "在手机底部显示主页、热帖、私聊和个人导航"
     zgie_bbs_enabled: "启用智工 BBS 品牌样式与站点配置任务"

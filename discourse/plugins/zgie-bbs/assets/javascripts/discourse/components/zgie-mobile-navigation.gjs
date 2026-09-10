@@ -2,6 +2,7 @@ import Component from "@glimmer/component";
 import { getOwner } from "@ember/owner";
 import { service } from "@ember/service";
 import bodyClass from "discourse/helpers/body-class";
+import EmbedMode from "discourse/lib/embed-mode";
 import { defaultHomepage } from "discourse/lib/utilities";
 import dConcatClass from "discourse/ui-kit/helpers/d-concat-class";
 import dIcon from "discourse/ui-kit/helpers/d-icon";
@@ -15,6 +16,7 @@ export default class ZgieMobileNavigation extends Component {
   get enabled() {
     return (
       this.siteSettings.zgie_bbs_mobile_navigation &&
+      !EmbedMode.enabled &&
       this.currentUser &&
       !this.router.currentRouteName?.startsWith("admin")
     );

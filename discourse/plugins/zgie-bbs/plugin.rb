@@ -11,7 +11,10 @@ enabled_site_setting :zgie_bbs_enabled
 
 register_asset "stylesheets/common/zgie-bbs.scss"
 register_asset "stylesheets/common/zgie-mobile.scss"
+register_asset "stylesheets/common/zgie-branded.scss"
 register_svg_icon "fire"
+register_svg_icon "book-open"
+register_svg_icon "compass"
 
 module ::ZgieBbs
   PLUGIN_NAME = "zgie-bbs"

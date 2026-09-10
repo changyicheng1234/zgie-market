@@ -54,7 +54,7 @@ module ZgieBbs
     def configure_branding
       images_dir = File.expand_path("../../assets/images", __dir__)
       set_upload_setting(:favicon, File.join(images_dir, "favicon.svg"))
-      set_upload_setting(:logo, File.join(images_dir, "logo.svg"))
+      set_upload_setting(:logo, File.join(images_dir, "logo-light.svg"))
       set_upload_setting(:logo_dark, File.join(images_dir, "logo.svg"))
       set_upload_setting(:logo_small, File.join(images_dir, "favicon.svg"))
     end
