@@ -112,28 +112,30 @@
     .zgie-hot-topics {
       display: block;
       box-sizing: border-box;
-      padding: 20px;
-      border: 1px solid var(--zgie-border);
-      border-radius: 14px;
+      border-radius: 16px;
       background: var(--secondary);
+      box-shadow: 0 4px 18px rgb(0 0 0 / 5%);
+      overflow: hidden;
       margin: 16px 0 24px;
 
       h2 {
         margin: 0;
-        font-size: 17px;
+        padding: 17px 24px;
+        border-bottom: 1px solid var(--zgie-border);
+        font-size: 16px;
+        font-weight: 600;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 9px;
       }
 
       h2 .d-icon {
-        color: var(--zgie-accent);
+        color: var(--primary-medium);
       }
 
-      &__description {
-        margin: 8px 0 16px;
-        color: var(--primary-high);
-        font-size: 12px;
+      > p,
+      > button {
+        margin: 20px 24px;
       }
 
       &__list {
@@ -143,46 +145,73 @@
       }
 
       li {
-        display: flex;
-        gap: 10px;
-        padding: 14px 0;
+        padding: 12px 24px;
+      }
+
+      li + li {
         border-top: 1px solid var(--zgie-border);
       }
 
-      li > div {
-        min-width: 0;
-      }
-
-      li a {
+      &__title {
+        display: block;
         color: var(--primary);
-        font-size: 14px;
-        font-weight: 600;
-        line-height: 1.6;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 1.45;
         overflow-wrap: anywhere;
       }
 
-      li a:hover {
+      &__title:hover {
         color: var(--zgie-accent);
       }
 
-      li p {
-        font-size: 11px;
-        line-height: 1.6;
-        margin: 6px 0 0;
-        color: var(--primary-high);
+      &__meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 7px;
+
+        .badge-category__wrapper {
+          min-width: 0;
+          max-width: 75%;
+          border-radius: 999px;
+          background: color-mix(
+            in srgb,
+            var(--category-badge-color) 28%,
+            var(--secondary)
+          );
+          padding: 2px 8px;
+          font-size: 11px;
+          line-height: 1.4;
+        }
       }
 
-      &__rank {
-        color: var(--zgie-accent);
-        font-size: 16px;
-        font-weight: 700;
-        min-width: 14px;
-        line-height: 1.6;
+      &__age {
+        flex-shrink: 0;
+        color: var(--primary-medium);
+        font-size: 12px;
       }
 
       &__empty {
         color: var(--primary-high);
         font-size: 13px;
+      }
+
+      &__all {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        border-top: 1px solid var(--zgie-border);
+        padding: 16px 24px;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--zgie-accent);
+
+        &:hover {
+          background: var(--zgie-accent-soft);
+        }
       }
     }
   }
@@ -192,12 +221,12 @@
   body.zgie-branded:has(.zgie-hot-topics) {
     .zgie-hot-topics {
       float: right;
-      width: 244px;
+      width: 32%;
       margin: 16px 0 24px 24px;
     }
 
     .list-container {
-      width: calc(100% - 268px);
+      width: calc(68% - 24px);
       margin-inline: 0;
     }
 

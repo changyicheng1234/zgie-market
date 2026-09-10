@@ -17,7 +17,7 @@ module PageObjects
       end
 
       def has_five_topics?
-        page.has_css?(".zgie-hot-topics__list a", count: 5)
+        page.has_css?(".zgie-hot-topics__title", count: 5)
       end
 
       def has_sidebar_beside_list?
@@ -31,7 +31,7 @@ module PageObjects
       end
 
       def open_first_topic
-        find(".zgie-hot-topics__list a", match: :first).click
+        find(".zgie-hot-topics__title", match: :first).click
       end
 
       def has_no_desktop_additions?

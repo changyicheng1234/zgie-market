@@ -18,6 +18,7 @@ module ZgieBbs
                      title: topic.title,
                      url: topic.relative_url,
                      category_id: topic.category_id,
+                     bumped_at: topic.bumped_at,
                      reply_count: [topic.posts_count - 1, 0].max
                    }
                  }

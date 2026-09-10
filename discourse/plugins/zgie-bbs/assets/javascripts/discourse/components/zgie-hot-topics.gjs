@@ -6,6 +6,8 @@ import didInsert from "@ember/render-modifiers/modifiers/did-insert";
 import { service } from "@ember/service";
 import { ajax } from "discourse/lib/ajax";
 import getURL from "discourse/lib/get-url";
+import dCategoryBadge from "discourse/ui-kit/helpers/d-category-badge";
+import dFormatDate from "discourse/ui-kit/helpers/d-format-date";
 import dIcon from "discourse/ui-kit/helpers/d-icon";
 import { i18n } from "discourse-i18n";
 
@@ -17,6 +19,7 @@ export default class ZgieHotTopics extends Component {
   @tracked topics = [];
   @tracked loading = true;
   @tracked failed = false;
+  allTopicsURL = getURL("/hot");
 
   get enabled() {
     return (
@@ -33,13 +36,12 @@ export default class ZgieHotTopics extends Component {
     try {
       const result = await ajax("/zgie-bbs/hot-topics.json");
       if (!this.isDestroying && !this.isDestroyed) {
-        this.topics = result.topics.map((topic, index) => ({
+        this.topics = result.topics.map((topic) => ({
           ...topic,
-          rank: index + 1,
           href: getURL(topic.url),
           category: this.site.categories.find(
             (category) => category.id === topic.category_id
-          )?.name,
+          ),
         }));
       }
     } catch {
@@ -61,9 +63,6 @@ export default class ZgieHotTopics extends Component {
         {{didInsert this.load}}
       >
         <h2>{{dIcon "fire"}} {{i18n "zgie_bbs.campus.hot"}}</h2>
-        <p class="zgie-hot-topics__description">{{i18n
-            "zgie_bbs.campus.hot_description"
-          }}</p>
         {{#if this.loading}}
           <p role="status">{{i18n "zgie_bbs.campus.loading"}}</p>
         {{else if this.failed}}
@@ -77,18 +76,18 @@ export default class ZgieHotTopics extends Component {
           <ol class="zgie-hot-topics__list">
             {{#each this.topics key="id" as |topic|}}
               <li>
-                <span
-                  class="zgie-hot-topics__rank"
-                  aria-hidden="true"
-                >{{topic.rank}}</span>
-                <div>
-                  <a href={{topic.href}}>{{topic.title}}</a>
-                  <p>{{topic.category}}
-                    <span>·
-                      {{i18n
-                        "zgie_bbs.campus.replies"
-                        count=topic.reply_count
-                      }}</span></p>
+                <a
+                  class="zgie-hot-topics__title"
+                  href={{topic.href}}
+                >{{topic.title}}</a>
+                <div class="zgie-hot-topics__meta">
+                  {{#if topic.category}}
+                    {{dCategoryBadge topic.category link=true hideParent=true}}
+                  {{/if}}
+                  <span class="zgie-hot-topics__age">{{dFormatDate
+                      topic.bumped_at
+                      format="tiny"
+                    }}</span>
                 </div>
               </li>
             {{else}}
@@ -98,6 +97,10 @@ export default class ZgieHotTopics extends Component {
             {{/each}}
           </ol>
         {{/if}}
+        <a class="zgie-hot-topics__all" href={{this.allTopicsURL}}>{{i18n
+            "zgie_bbs.campus.show_all"
+          }}
+          {{dIcon "arrow-right"}}</a>
       </aside>
     {{/if}}
   </template>

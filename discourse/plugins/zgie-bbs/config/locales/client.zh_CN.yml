@@ -3,7 +3,8 @@ zh_CN:
     zgie_bbs:
       campus:
         categories: "校园集市"
-        hot: "校园热榜"
+        hot: "热门主题"
+        show_all: "显示全部"
         hot_description: "正在热议 · 热门 5 帖"
         loading: "正在加载热榜…"
         error: "热榜暂时无法加载"

@@ -3,7 +3,8 @@ en:
     zgie_bbs:
       campus:
         categories: "Campus marketplace"
-        hot: "Trending on campus"
+        hot: "Trending topics"
+        show_all: "Show all"
         hot_description: "Most discussed · Top 5 topics"
         loading: "Loading trending topics…"
         error: "Trending topics are unavailable"
