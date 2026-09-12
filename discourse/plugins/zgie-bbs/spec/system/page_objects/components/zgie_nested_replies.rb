@@ -110,6 +110,29 @@ module PageObjects
         JS
       end
 
+      def scroll_to_bottom
+        page.execute_script(
+          "window.scrollTo(0, document.documentElement.scrollHeight)"
+        )
+      end
+
+      def sample_scroll_up(distance:, step:)
+        page.evaluate_async_script(<<~JS)
+          const done = arguments[0];
+          const samples = [];
+          const sample = () => {
+            samples.push({
+              count: parseInt(document.querySelector(".zgie-topic-position__count").textContent, 10),
+              position: parseFloat(document.querySelector(".zgie-topic-position").style.getPropertyValue("--zgie-topic-position"))
+            });
+            if (samples.length > #{distance / step}) { done(samples); return; }
+            window.scrollBy(0, -#{step});
+            setTimeout(sample, 35);
+          };
+          sample();
+        JS
+      end
+
       def return_to_top
         page.execute_script("window.scrollTo(0, 0)")
       end

@@ -123,7 +123,7 @@ RSpec.describe "Fixed nested replies" do
       expect(reply_tree).to have_topic_position_to_right_of_content
       reply_tree.scroll_post_to_reading_line(anonymous_reply)
       expect(reply_tree).to have_topic_position(
-        current: 4,
+        current: 5,
         total: topic.reload.highest_post_number
       )
     end
@@ -181,6 +181,40 @@ RSpec.describe "Fixed nested replies" do
       expect(reply_tree).to have_topic_position(current: 1, total: 10)
       reply_tree.scroll_post_to_reading_line(early_root)
       expect(reply_tree).to have_topic_position(current: 2, total: 10)
+    end
+  end
+
+  it "reaches the last reply and moves smoothly back through cloaked trees" do
+    progress_topic = Fabricate(:topic, user: primary_user)
+    Fabricate(:post, topic: progress_topic, user: primary_user, post_number: 1)
+    14.times do |index|
+      Fabricate(
+        :post,
+        topic: progress_topic,
+        user: primary_user,
+        raw: "验证末尾和虚拟滚动的留言 #{index + 1}"
+      )
+    end
+
+    resize_window(height: 1000) do
+      nested_view.visit_nested(progress_topic)
+      reply_tree.scroll_to_bottom
+      expect(reply_tree).to have_topic_position(current: 15, total: 15)
+      expect(page).to have_css(".nested-post--cloaked")
+
+      samples = reply_tree.sample_scroll_up(distance: 2400, step: 25)
+      counts = samples.map { |sample| sample["count"] }
+      expect(counts.first).to eq(15)
+      expect(counts.last).to be < 10
+      expect(counts.each_cons(2).all? { |a, b| (0..1).cover?(a - b) }).to eq(
+        true
+      )
+      positions = samples.map { |sample| sample["position"] }
+      expect(positions.each_cons(2).all? { |a, b| b <= a + 0.01 }).to eq(true)
+      expect(positions.uniq.length).to be > counts.uniq.length
+
+      reply_tree.scroll_to_bottom
+      expect(reply_tree).to have_topic_position(current: 15, total: 15)
     end
   end
 

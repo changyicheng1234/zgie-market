@@ -1,5 +1,6 @@
 import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
+import { getOwner } from "@ember/owner";
 import { service } from "@ember/service";
 import { trustHTML } from "@ember/template";
 import { modifier } from "ember-modifier";
@@ -18,9 +19,11 @@ export default class ZgieTopicPosition extends Component {
   }
 
   @service header;
+  @service siteSettings;
 
   @tracked compact = false;
   @tracked current = 1;
+  @tracked position = 1;
   @tracked currentDate;
   @tracked dockLeft;
 
@@ -91,7 +94,7 @@ export default class ZgieTopicPosition extends Component {
     const ratio =
       this.total <= 1
         ? 0
-        : (Math.min(this.current, this.total) - 1) / (this.total - 1);
+        : (Math.min(this.position, this.total) - 1) / (this.total - 1);
     const visualPercentage = 5 + Math.max(0, Math.min(1, ratio)) * 90;
     const declarations = [`--zgie-topic-position: ${visualPercentage}%`];
     if (!this.compact && this.dockLeft != null) {
@@ -155,12 +158,17 @@ export default class ZgieTopicPosition extends Component {
       this._topicId = this.topic?.id;
       this._lastScrollY = null;
       this.current = 1;
+      this.position = 1;
     }
     const scrollY = window.scrollY;
     const delta = this._lastScrollY == null ? 0 : scrollY - this._lastScrollY;
     // Image loads, expanding replies and our own counter render must not
     // select another post while the reader remains at the same position.
-    if (this._lastScrollY != null && Math.abs(delta) < 2) {
+    const atBottom =
+      scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
+    // At the bottom, newly uncloaked replies must finish the count even when
+    // there is no remaining scroll distance to trigger another scroll event.
+    if (this._lastScrollY != null && Math.abs(delta) < 2 && !atBottom) {
       return;
     }
     const posts = this._postsInReadingOrder();
@@ -168,29 +176,86 @@ export default class ZgieTopicPosition extends Component {
       return;
     }
 
-    const headerOffset = Number(this.header?.headerOffset) || 60;
-    const readingLine = Math.min(window.innerHeight * 0.36, headerOffset + 180);
-    // Advance only when the next post's top crosses the reading line.
-    // Nearest-edge selection can oscillate in gaps and while images resize.
-    let post = posts[0];
-    for (const candidate of posts) {
-      if (candidate.getBoundingClientRect().top > readingLine) {
-        break;
+    const controller = getOwner(this).lookup("controller:nested");
+    // The native view cloaks entire offscreen reply trees. DOM indices are
+    // therefore not stable positions: derive ordinals from the loaded model,
+    // reserving space for descendants behind “more replies” as well.
+    const ordinals = new Map([[1, 1]]);
+    const visit = (node, ordinal, depth = 0) => {
+      ordinals.set(node.post.post_number, ordinal);
+      let next = ordinal + 1;
+      const children =
+        controller.fetchedChildrenCache.get(
+          `${this.topic.id}:${node.post.post_number}`
+        )?.childNodes ||
+        node.children ||
+        [];
+      for (const child of children) {
+        next = visit(child, next, depth + 1);
       }
-      post = candidate;
+      const flattened =
+        this.siteSettings.nested_replies_cap_nesting_depth &&
+        depth >= this.siteSettings.nested_replies_max_depth;
+      return flattened
+        ? next
+        : Math.max(next, ordinal + 1 + (node.post.total_descendant_count || 0));
+    };
+    let ordinal = 2;
+    for (const node of controller.rootNodes) {
+      ordinal = visit(node, ordinal);
     }
 
-    const readingPosition = posts.indexOf(post) + 1;
-    if (readingPosition > 0) {
-      this.current =
-        this._lastScrollY == null
-          ? readingPosition
-          : delta > 0
-            ? Math.max(this.current, readingPosition)
-            : Math.min(this.current, readingPosition);
-      this.currentDate = this._dateFromPost(post);
-      this._lastScrollY = scrollY;
+    const headerOffset = Number(this.header?.headerOffset) || 60;
+    const readingLine = Math.min(window.innerHeight * 0.36, headerOffset + 180);
+    const anchors = posts
+      .map((post) => ({
+        post,
+        position: ordinals.get(Number(post.dataset.postNumber)),
+        y: Math.max(
+          0,
+          scrollY + post.getBoundingClientRect().top - readingLine
+        ),
+      }))
+      .filter((anchor) => anchor.position != null);
+    if (!anchors.length) {
+      return;
     }
+    anchors[0].y = 0;
+
+    // Compress only the final viewport when the last reply cannot reach the
+    // reading line. Use the same mapping in both directions, with no end snap.
+    const maxScroll =
+      document.documentElement.scrollHeight - window.innerHeight;
+    const last = anchors.at(-1);
+    if (!controller.hasMoreRoots && last.y > maxScroll) {
+      const start = Math.max(0, maxScroll - window.innerHeight);
+      const scale = (maxScroll - start) / (last.y - start);
+      for (const anchor of anchors) {
+        if (anchor.y > start) {
+          anchor.y = start + (anchor.y - start) * scale;
+        }
+      }
+    }
+
+    let previous = anchors[0];
+    let position = previous.position;
+    for (const anchor of anchors.slice(1)) {
+      if (anchor.y > scrollY) {
+        const fraction = Math.max(
+          0,
+          (scrollY - previous.y) / (anchor.y - previous.y)
+        );
+        position =
+          previous.position + fraction * (anchor.position - previous.position);
+        break;
+      }
+      previous = anchor;
+      position = anchor.position;
+    }
+    this.position = Math.min(this.total, position);
+    this.current = Math.max(1, Math.floor(this.position + 0.001));
+    this.currentDate = this._dateFromPost(previous.post);
+    this._lastScrollY = scrollY;
   }
 
   _postsInReadingOrder() {
