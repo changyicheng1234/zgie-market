@@ -97,6 +97,23 @@ module PageObjects
           ) == "none"
       end
 
+      def grow_content_above_reading_position
+        page.execute_script(<<~JS)
+          document.documentElement.style.overflowAnchor = "none";
+          const delayedContent = document.createElement("div");
+          delayedContent.style.height = "500px";
+          document.querySelector(".nested-view__op-article").append(delayedContent);
+        JS
+        page.evaluate_async_script(<<~JS)
+          const done = arguments[0];
+          requestAnimationFrame(() => requestAnimationFrame(() => done(true)));
+        JS
+      end
+
+      def return_to_top
+        page.execute_script("window.scrollTo(0, 0)")
+      end
+
       def force_click_reaction_summary(post)
         selector = "#{post_wrapper_selector(post)} .discourse-reactions-counter"
         page.execute_script(

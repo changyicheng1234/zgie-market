@@ -45,6 +45,16 @@ RSpec.describe "Desktop campus layout" do
     ).to have_visible_navigation
   end
 
+  it "switches the homepage between light and dark from the header" do
+    SiteSetting.interface_color_selector = "header"
+    visit("/custom")
+    expect(campus).to have_valid_color_selector
+    campus.choose_color("浅色")
+    expect(campus).to have_color_mode("light")
+    campus.choose_color("深色")
+    expect(campus).to have_color_mode("dark")
+  end
+
   it "separates the finite homepage from the full post list and orders navigation" do
     category = Category.find_by!(slug: "daily")
     23.times { Fabricate(:post, topic: Fabricate(:topic, category: category)) }

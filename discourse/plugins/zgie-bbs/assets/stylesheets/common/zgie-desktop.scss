@@ -315,6 +315,33 @@
   }
 }
 
+@media (width >= 768px) {
+  body.zgie-branded:has(.zgie-home) {
+    --zgie-accent: light-dark(#28618b, #b4a2ca);
+    --zgie-accent-soft: light-dark(#eaf2f9, #292330);
+    --zgie-surface: light-dark(#f7fafc, #201d25);
+    background: linear-gradient(
+      180deg,
+      light-dark(#edf4fa, #241e30),
+      var(--secondary) 950px
+    );
+    background-attachment: fixed;
+
+    .zgie-banner {
+      background: linear-gradient(
+        120deg,
+        light-dark(#e3edf6, #30273e),
+        light-dark(#f0f5f9, #25212d)
+      );
+
+      &::before,
+      &::after {
+        border-color: light-dark(rgb(72 125 164 / 10%), rgb(180 162 202 / 8%));
+      }
+    }
+  }
+}
+
 @media (768px <= width < 1000px) {
   body.zgie-branded .zgie-banner__categories {
     grid-template-columns: repeat(3, minmax(0, 1fr));

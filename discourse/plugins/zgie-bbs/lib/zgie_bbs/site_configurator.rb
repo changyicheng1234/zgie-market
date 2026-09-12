@@ -79,6 +79,7 @@ module ZgieBbs
     # UploadCreator dedupes by sha1, so re-running this on an
     # already-configured site is a no-op.
     def configure_branding
+      SiteSetting.interface_color_selector = "header"
       images_dir = File.expand_path("../../assets/images", __dir__)
       set_upload_setting(:favicon, File.join(images_dir, "favicon.svg"))
       set_upload_setting(:logo, File.join(images_dir, "logo-light.svg"))

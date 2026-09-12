@@ -49,6 +49,22 @@ module PageObjects
         page.has_css?(".zgie-home__feed .topic-list-item", count: 20)
       end
 
+      def has_valid_color_selector?
+        page.has_css?('button[aria-label^="颜色模式"]') &&
+          page.has_no_css?('button[aria-label*="missing"]')
+      end
+
+      def choose_color(label)
+        find('button[aria-label^="颜色模式"]').click
+        click_button(label, exact: true)
+      end
+
+      def has_color_mode?(mode)
+        page.evaluate_script(
+          "getComputedStyle(document.documentElement).colorScheme"
+        ) == mode
+      end
+
       def has_ordered_navigation?
         links = all('[data-section-name="zgie-navigation"] a').map(&:text)
         links == %w[首页 帖子 我的帖子 我的消息] && page.evaluate_script(<<~JS)

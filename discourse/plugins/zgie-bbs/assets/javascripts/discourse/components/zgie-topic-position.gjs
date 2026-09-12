@@ -39,7 +39,11 @@ export default class ZgieTopicPosition extends Component {
       passive: true,
     });
 
-    this._mutationObserver = new MutationObserver(this._onViewportChange);
+    this._mutationObserver = new MutationObserver((records) => {
+      if (records.some((record) => !element.contains(record.target))) {
+        this._scheduleUpdate();
+      }
+    });
     this._mutationObserver.observe(nestedView, {
       childList: true,
       subtree: true,
@@ -147,35 +151,45 @@ export default class ZgieTopicPosition extends Component {
   }
 
   _updateCurrentPost() {
+    if (this._topicId !== this.topic?.id) {
+      this._topicId = this.topic?.id;
+      this._lastScrollY = null;
+      this.current = 1;
+    }
+    const scrollY = window.scrollY;
+    const delta = this._lastScrollY == null ? 0 : scrollY - this._lastScrollY;
+    // Image loads, expanding replies and our own counter render must not
+    // select another post while the reader remains at the same position.
+    if (this._lastScrollY != null && Math.abs(delta) < 2) {
+      return;
+    }
     const posts = this._postsInReadingOrder();
     if (!posts.length) {
       return;
     }
 
     const headerOffset = Number(this.header?.headerOffset) || 60;
-    const readingLine = Math.min(
-      window.innerHeight * 0.36,
-      headerOffset + 180
-    );
-    const post = posts.reduce((closest, candidate) => {
-      const rect = candidate.getBoundingClientRect();
-      const distance =
-        rect.top <= readingLine && rect.bottom >= readingLine
-          ? 0
-          : Math.min(
-              Math.abs(rect.top - readingLine),
-              Math.abs(rect.bottom - readingLine)
-            );
-
-      return !closest || distance < closest.distance
-        ? { element: candidate, distance }
-        : closest;
-    }, null)?.element;
+    const readingLine = Math.min(window.innerHeight * 0.36, headerOffset + 180);
+    // Advance only when the next post's top crosses the reading line.
+    // Nearest-edge selection can oscillate in gaps and while images resize.
+    let post = posts[0];
+    for (const candidate of posts) {
+      if (candidate.getBoundingClientRect().top > readingLine) {
+        break;
+      }
+      post = candidate;
+    }
 
     const readingPosition = posts.indexOf(post) + 1;
     if (readingPosition > 0) {
-      this.current = readingPosition;
+      this.current =
+        this._lastScrollY == null
+          ? readingPosition
+          : delta > 0
+            ? Math.max(this.current, readingPosition)
+            : Math.min(this.current, readingPosition);
       this.currentDate = this._dateFromPost(post);
+      this._lastScrollY = scrollY;
     }
   }
 
@@ -189,7 +203,11 @@ export default class ZgieTopicPosition extends Component {
     return [...nestedView.querySelectorAll(POSITIONABLE_POSTS)].filter(
       (post) => {
         const postNumber = Number(post.dataset.postNumber);
-        if (postNumber <= 0 || seenPostNumbers.has(postNumber)) {
+        if (
+          postNumber <= 0 ||
+          seenPostNumbers.has(postNumber) ||
+          !post.getClientRects().length
+        ) {
           return false;
         }
 
@@ -248,7 +266,9 @@ export default class ZgieTopicPosition extends Component {
           <span class="zgie-topic-position__thumb" aria-hidden="true"></span>
           <span class="zgie-topic-position__meta">
             <strong class="zgie-topic-position__count" aria-live="polite">
-              {{this.current}} / {{this.total}}
+              {{this.current}}
+              /
+              {{this.total}}
             </strong>
             {{#if this.currentDate}}
               <span class="zgie-topic-position__current-date">

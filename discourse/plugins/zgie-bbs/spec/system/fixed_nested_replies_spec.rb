@@ -173,6 +173,14 @@ RSpec.describe "Fixed nested replies" do
 
       reply_tree.scroll_post_to_reading_line(later_root)
       expect(reply_tree).to have_topic_position(current: 4, total: 10)
+
+      reply_tree.grow_content_above_reading_position
+      expect(reply_tree).to have_topic_position(current: 4, total: 10)
+
+      reply_tree.return_to_top
+      expect(reply_tree).to have_topic_position(current: 1, total: 10)
+      reply_tree.scroll_post_to_reading_line(early_root)
+      expect(reply_tree).to have_topic_position(current: 2, total: 10)
     end
   end
 

@@ -43,6 +43,7 @@ RSpec.describe ZgieBbs::SiteConfigurator do
       expect(SiteSetting.force_hostname).to eq("bbs.test.localhost")
       expect(SiteSetting.port).to eq("4200")
       expect(SiteSetting.external_system_avatars_url).to eq("")
+      expect(SiteSetting.interface_color_selector).to eq("header")
       expect(Category.find_by(slug: "study")&.name).to eq("学习交流")
     end
 
