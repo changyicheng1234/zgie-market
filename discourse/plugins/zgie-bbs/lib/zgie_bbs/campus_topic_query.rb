@@ -11,6 +11,13 @@ module ZgieBbs
         no_definitions: true,
         visible: true
       )
+        # `no_definitions` filters on `categories.topic_id`, but nothing
+        # upstream forces that table into the query as a real SQL join --
+        # `Topic.includes(:category)` alone lets Rails silently fall back to
+        # a separate preload query, so the raw `no_definitions` WHERE clause
+        # blows up with "missing FROM-clause entry for table categories".
+        # An explicit join guarantees it's actually there.
+        .joins(:category)
         .where(
           category_id:
             Category.where(slug: SiteConfigurator::CAMPUS_SLUGS).select(:id)
