@@ -53,6 +53,21 @@ RSpec.describe "Campus trending topics" do
     expect(response.parsed_body.fetch("topics").pluck("id")).to eq([allowed.id])
   end
 
+  it "includes topics from non-campus categories, such as Uncategorized" do
+    uncategorized = Fabricate(:topic, category_id: SiteSetting.uncategorized_category_id)
+    study = Fabricate(:topic, category: Fabricate(:category, slug: "study"))
+    [uncategorized, study].each do |topic|
+      TopicHotScore.create!(topic_id: topic.id, score: 1)
+    end
+
+    get "/zgie-bbs/hot-topics.json"
+    expect(response.status).to eq(200)
+    expect(response.parsed_body.fetch("topics").pluck("id")).to include(
+      uncategorized.id,
+      study.id
+    )
+  end
+
   it "requires authentication when the site requires login", anonymous: true do
     SiteSetting.login_required = true
     get "/zgie-bbs/hot-topics.json"

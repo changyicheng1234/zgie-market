@@ -3,6 +3,9 @@
 module ZgieBbs
   class CampusTopicQuery < ::TopicQuery
     def hot_topics
+      # Ranks across every category the user can see, not just the campus
+      # ones -- CAMPUS_SLUGS still drives the desktop sidebar/banner
+      # shortcuts elsewhere, but the trending list itself is site-wide.
       # TopicQuery applies Guardian's category permissions and excludes PMs,
       # deleted topics and category definitions. Rank before limiting to five.
       default_results(
@@ -18,10 +21,6 @@ module ZgieBbs
         # blows up with "missing FROM-clause entry for table categories".
         # An explicit join guarantees it's actually there.
         .joins(:category)
-        .where(
-          category_id:
-            Category.where(slug: SiteConfigurator::CAMPUS_SLUGS).select(:id)
-        )
         .joins(
           "LEFT JOIN topic_hot_scores ON topic_hot_scores.topic_id = topics.id"
         )
