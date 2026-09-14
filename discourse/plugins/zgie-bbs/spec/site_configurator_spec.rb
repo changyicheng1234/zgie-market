@@ -81,6 +81,27 @@ RSpec.describe ZgieBbs::SiteConfigurator do
       expect(SiteSetting.discourse_reactions_enabled).to eq(true)
     end
 
+    it "disables every post/topic/reply approval requirement, site-wide and per-category" do
+      moderated = Fabricate(
+        :category,
+        require_topic_approval: true,
+        require_reply_approval: true
+      )
+      SiteSetting.approve_post_count = 5
+      SiteSetting.approve_unless_trust_level = 2
+      SiteSetting.approve_new_topics_unless_trust_level = 2
+      SiteSetting.approve_unless_staged = true
+
+      described_class.call(env:, output: StringIO.new)
+
+      expect(SiteSetting.approve_post_count).to eq(0)
+      expect(SiteSetting.approve_unless_trust_level).to eq(0)
+      expect(SiteSetting.approve_new_topics_unless_trust_level).to eq(0)
+      expect(SiteSetting.approve_unless_staged).to eq(false)
+      expect(moderated.reload.require_topic_approval).to eq(false)
+      expect(moderated.reload.require_reply_approval).to eq(false)
+    end
+
     it "supports Discourse invite links without a global code" do
       env["ZGIE_REGISTRATION_MODE"] = "invite_links"
       env["ZGIE_INVITE_CODE"] = ""

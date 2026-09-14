@@ -56,6 +56,7 @@ module ZgieBbs
       configure_urls
       configure_access
       configure_discussions
+      disable_post_approval_requirements
       create_categories
       @output.puts "智工 BBS configuration applied."
     end
@@ -162,6 +163,25 @@ module ZgieBbs
       SiteSetting.nested_replies_max_depth = 1
       SiteSetting.nested_replies_cap_nesting_depth = true
       SiteSetting.nested_replies_default_sort = "old"
+    end
+
+    # ZGIE wants unmoderated free speech: no post, reply, or new-topic of any
+    # user's should ever land in the staff review queue awaiting approval
+    # before other members can see it. Covers both the site-wide trust-level
+    # thresholds and the per-category toggles (the latter can be flipped by
+    # an admin in the category settings UI independently of this task, so we
+    # sweep every existing category, not just ones we create).
+    def disable_post_approval_requirements
+      SiteSetting.approve_post_count = 0
+      SiteSetting.approve_unless_trust_level = 0
+      SiteSetting.approve_new_topics_unless_trust_level = 0
+      SiteSetting.approve_unless_staged = false
+      Category.where(require_topic_approval: true).update_all(
+        require_topic_approval: false
+      )
+      Category.where(require_reply_approval: true).update_all(
+        require_reply_approval: false
+      )
     end
 
     def create_categories

@@ -99,7 +99,8 @@ cd /var/discourse
 - [x] **域名切换到 `ise-market.cn`**：2026-09-07 完成（DNS/证书/Nginx/`app.yml`/`force_https`），详见上方「域名已切换」章节
 - [ ] **2026-12-04 前手动续期 `ise-market.cn` 的 HTTPS 证书**：腾讯云 TrustAsia DV 证书 90 天有效，不自动续期，到期前去腾讯云重新申请并传上服务器换掉 `/etc/nginx/ssl/ise-market.cn.*`
 - [ ] 用户量上来后评估服务器内存升级（当前 3.6GB；~1000 人学院规模建议升 **4核8G**，磁盘扩到 100G，见「域名已切换」下方对话记录 / 服务器信息里的升配说明）
-- [ ] **修复 OpenISE 侧边栏链接在桌面端不显示的问题**（见下方「已知问题」）：需要改前端代码 + rebuild，故意推迟到下次服务器升级后一并做
+- [x] **修复 OpenISE 侧边栏链接在桌面端不显示的问题**：已在 `codex/meta-desktop-campus` 分支里改好并 fast-forward 进本地 `codex/feature-discourse-bbs`（2026-09-14），详见下方「已知问题」的更新记录。**尚未 push / 部署**，等下次 rebuild 一起上线
+- [x] **评论/回复需帖主审核才能发出去**：定位为 Discourse 审核队列相关站点设置（而非插件逻辑），已在 `SiteConfigurator` 里补上 `disable_post_approval_requirements`（2026-09-14，本地未部署），详见下方「已知问题」
 - [ ] 邀请码用完 / 需要新邀请码时，去 Discourse 后台管理面板（`/admin`）生成
 - [ ] 视频/长期运营需求：评估是否需要开放公开注册，或长期保持邀请制
 
@@ -107,14 +108,20 @@ cd /var/discourse
 
 ## 已知问题
 
-### OpenISE 侧边栏链接桌面端不显示（2026-09-07 记录，待修）
+### OpenISE 侧边栏链接桌面端不显示（2026-09-07 记录，2026-09-14 已在代码里修复，待部署）
 
-`zgie-bbs` 插件的 `assets/javascripts/discourse/api-initializers/zgie-external-links.gjs`（`5b2a07a` 引入，人B 加的 OpenISE 外链，指向 `https://openise.pages.dev`）在**手机端能显示、桌面端不显示**。
+`zgie-bbs` 插件的 `assets/javascripts/discourse/api-initializers/zgie-external-links.gjs`（`5b2a07a` 引入，人B 加的 OpenISE 外链，指向 `https://openise.pages.dev`）曾经**手机端能显示、桌面端不显示**。
 
-- **代码没问题**：容器内源文件、编译产物（`public/assets/js/plugins/zgie-bbs_main.*.digested.js` 里能 grep 到 `openise`）都在，是运行时注册没成功。
 - **根因**：这段代码把链接挂在 **Chat 专属侧边栏面板**上，用私有 API `discourse/lib/sidebar/custom-sections` 的 `customPanels` 去检测 Chat 面板是否存在，检测不到就每 150ms 重试、6 秒后放弃。桌面端在 `chat_separate_sidebar_mode = never`（当前值）下没有独立 Chat 侧边栏面板，检测永远失败；手机端全屏 Chat 有独立面板所以能注册。
 - **试过但无效**：把 `chat_separate_sidebar_mode` 改成 `always`，结果桌面端还是不行、连手机端也失效了（该值又改变了 Chat 侧边栏结构）。已回退回 `never`。
-- **正解（待做）**：改 `zgie-external-links.gjs`，改用公开稳定的 `api.addSidebarSection(callback)`（不传 panel 参数 → 注册到主侧边栏），去掉 Chat 面板检测和轮询。这样桌面/手机主侧边栏都常驻显示。改完要 commit + push + `./launcher rebuild app`（前端 assets 重新编译，约 1 小时下线），所以合并到下次服务器升级 rebuild 时一起做。
+- **已修复**：`codex/meta-desktop-campus` 分支（`8467bcf` 起）把 `zgie-external-links.gjs` 改成了公开稳定的 `api.addSidebarSection(callback)`（不传 panel 参数 → 直接注册到主侧边栏），去掉了 Chat 面板检测和轮询。2026-09-14 已 fast-forward 合并进本地 `codex/feature-discourse-bbs`（提交 `7a4e257`），**尚未 push 到 GitHub、也未在服务器上 rebuild**，桌面端显示效果还需部署后再验证一次。
+
+### 评论需帖主同意审核才能发出去（2026-09-14 记录并在本地修复，待部署）
+
+生产站点实测发现：帖子下的回复要等待审核通过才会公开显示，不符合"邀请制但言论自由"的产品定位。这不是 `zgie-bbs` 插件里写的逻辑（插件代码里搜不到任何 approve/review 相关处理），而是 Discourse 核心的审核队列机制——大概率是 `approve_post_count` / `approve_unless_trust_level` / `approve_new_topics_unless_trust_level` / `approve_unless_staged` 这类站点设置，或某个分类被打开了 `require_topic_approval` / `require_reply_approval`（分类设置里的"新贴/新回复需要审核"开关，可以在后台被单独打开，不受 `SiteConfigurator` 一次性初始化的约束）。
+
+- **处理方式**：没有本地 Discourse 环境复现确认是具体哪一项在起作用，索性把已知的审核触发开关全部在 `SiteConfigurator#disable_post_approval_requirements` 里显式关闭/清零——四个站点级设置改为不需要审核，并遍历所有已存在分类把 `require_topic_approval`/`require_reply_approval` 强制置为 `false`（不止新建分类）。已加入 `call` 主流程，`bin/rake zgie_bbs:configure` 会连带执行。
+- **待部署验证**：push 到 `codex/feature-discourse-bbs` + 服务器 `rebuild` 后需要跑一次 `bin/rake zgie_bbs:configure`，然后实测发一条回复确认不再进审核队列。如果验证后发现还是有审核提示，说明触发的是别的设置或 Akismet/第三方反垃圾插件，需要再登录后台 site settings 搜 "approve" 逐项核对。
 
 ---
 
@@ -130,6 +137,7 @@ cd /var/discourse
 - **2026-09-05：ICP 备案通过。** 腾讯云备案订单号 `30178696354544589`，公安备案数据码 `a5fe5258b0976b89d9ae007964be24e8`。本次仅更新本地文档记录备案结果，DNS 解析、HTTPS 证书、Nginx 及 `app.yml` 的 `DISCOURSE_HOSTNAME` 切换到 `ise-market.cn` 仍未执行，留到下次登录服务器时按「ICP 备案」章节的四步操作完成。
 - **2026-09-07：域名切换到 `ise-market.cn` + 部署最新插件代码。** 上传腾讯云 TrustAsia DV 证书并重写 nginx（新域名反代 Discourse、`www` 和旧 DuckDNS 域名 301 到 apex、新增 `X-Forwarded-Proto` header）；`app.yml` 的 `DISCOURSE_HOSTNAME` 改为 `ise-market.cn` 并 `./launcher rebuild app`，rebuild 顺带从 GitHub 拉了最新分支代码上线（`5b2a07a` 智工集市 rebrand + OpenISE 侧边栏链接 `zgie-external-links.gjs`，此前生产还是 8-18 的旧插件）；一并开启 `force_https`（`base_url` 现在 https，已验证无 301 循环）。端到端验证通过：新域名 HTTPS 200、旧域名 301 跳转、`srv/status` 200、`Jobs::ZgieNotifyWecom` 正常加载、无 error 日志。备份：`nginx sites-available/zgie-market.bak-20260907`、`app.yml.bak-20260907`。遗留：`ise-market.cn` 证书 90 天需手动续期（到期 2026-12-04）；`www.ise-market.cn` 的 DNS A 记录尚未添加（nginx block 已就绪）。
 - **2026-09-07（同日续）：品牌切到"智工集市" + 密码长度放宽。** 发现 rebuild 后标题/图标仍是旧的——根因见下方「踩坑记录」：`zgie-bbs` 插件的 `SiteConfigurator` 不会随容器启动自动跑。处理：`app.yml` 的 `ZGIE_SITE_TITLE` 改为"智工集市"，容器内 `bin/rails runner` 调 `ZgieBbs::SiteConfigurator.call`（临时注入正确标题，无需再 rebuild），标题 + logo/logo_dark/logo_small/favicon 全部更新为插件内新素材，`/site/basic-info.json` 已确认。另按需求把 `min_password_length` 10→8、`min_admin_password_length` 15→8（Discourse 硬下限就是 8）。OpenISE 侧边栏链接问题见下方「待办」与「已知问题」，本次未解决，推迟到服务器升级后随代码改动一起处理。
+- **2026-09-14：本地合并主题更新分支 + 修复两个生产反馈问题（未部署）。** 从 GitHub fast-forward 合并 `codex/meta-desktop-campus`（移动端底栏导航、Meta 风格视觉、桌面工科蓝校园主题、独立首页、热榜等，详见 `docs/discourse-rebuild/DESKTOP-CAMPUS.md` 与 `RESPONSIVE-DESIGN.md`）进本地 `codex/feature-discourse-bbs`，此前该分支只在本地预览、从未上生产。该合并顺带修复了 OpenISE 侧边栏桌面端不显示的问题。另针对生产实测反馈的"回复需审核才发出"问题，在 `SiteConfigurator` 新增 `disable_post_approval_requirements`，站点级四项审核相关设置清零 + 遍历分类关闭 `require_topic_approval`/`require_reply_approval`。本次只改了本地仓库，**未 push、未登录服务器、生产环境未受影响**，push + `rebuild` + 重跑 `zgie_bbs:configure` 留待下次确认部署时执行。
 
 ---
 
