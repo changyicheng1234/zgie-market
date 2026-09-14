@@ -116,12 +116,13 @@ cd /var/discourse
 - **试过但无效**：把 `chat_separate_sidebar_mode` 改成 `always`，结果桌面端还是不行、连手机端也失效了（该值又改变了 Chat 侧边栏结构）。已回退回 `never`。
 - **已修复**：`codex/meta-desktop-campus` 分支（`8467bcf` 起）把 `zgie-external-links.gjs` 改成了公开稳定的 `api.addSidebarSection(callback)`（不传 panel 参数 → 直接注册到主侧边栏），去掉了 Chat 面板检测和轮询。2026-09-14 已 fast-forward 合并进本地 `codex/feature-discourse-bbs`（提交 `7a4e257`），**尚未 push 到 GitHub、也未在服务器上 rebuild**，桌面端显示效果还需部署后再验证一次。
 
-### 评论需帖主同意审核才能发出去（2026-09-14 记录并在本地修复，待部署）
+### 评论需帖主同意审核才能发出去（2026-09-14 记录，已定位根因并在生产修复）
 
-生产站点实测发现：帖子下的回复要等待审核通过才会公开显示，不符合"邀请制但言论自由"的产品定位。这不是 `zgie-bbs` 插件里写的逻辑（插件代码里搜不到任何 approve/review 相关处理），而是 Discourse 核心的审核队列机制——大概率是 `approve_post_count` / `approve_unless_trust_level` / `approve_new_topics_unless_trust_level` / `approve_unless_staged` 这类站点设置，或某个分类被打开了 `require_topic_approval` / `require_reply_approval`（分类设置里的"新贴/新回复需要审核"开关，可以在后台被单独打开，不受 `SiteConfigurator` 一次性初始化的约束）。
+生产站点实测发现：帖子下的回复要等待审核通过才会公开显示，不符合"邀请制但言论自由"的产品定位。这不是 `zgie-bbs` 插件里写的逻辑，而是 Discourse 核心的审核队列机制。
 
-- **处理方式**：没有本地 Discourse 环境复现确认是具体哪一项在起作用，索性把已知的审核触发开关全部在 `SiteConfigurator#disable_post_approval_requirements` 里显式关闭/清零——四个站点级设置改为不需要审核，并遍历所有已存在分类把 `require_topic_approval`/`require_reply_approval` 强制置为 `false`（不止新建分类）。已加入 `call` 主流程，`bin/rake zgie_bbs:configure` 会连带执行。
-- **待部署验证**：push 到 `codex/feature-discourse-bbs` + 服务器 `rebuild` 后需要跑一次 `bin/rake zgie_bbs:configure`，然后实测发一条回复确认不再进审核队列。如果验证后发现还是有审核提示，说明触发的是别的设置或 Akismet/第三方反垃圾插件，需要再登录后台 site settings 搜 "approve" 逐项核对。
+- **首次修复尝试写错了**：一开始按记忆写的 `SiteConfigurator#disable_post_approval_requirements` 用了 `approve_unless_trust_level` / `approve_new_topics_unless_trust_level`（旧版 Discourse 的设置名）和 `Category#require_topic_approval` / `require_reply_approval`（旧版的分类级审核开关列）。这两者在当前生产跑的 Discourse 版本里都已经不存在了——`bin/rake zgie_bbs:configure` 直接报 `NoMethodError: undefined method 'approve_unless_trust_level='`，而且 `Category` 表压根没有 `require_topic_approval` 这一列（该功能已被完全并入下面的站点级分组设置，新版本里分类不再单独有审核开关）。
+- **实际根因**：SSH 上服务器用 `bin/rails runner` 现查生产实际值后确认——`approve_post_count`(0)、`approve_unless_allowed_groups`(`1|2|10`，已含 trust_level_0)、`approve_new_topics_unless_allowed_groups`(`1|2|10`) 这几项本来就是默认值、不是问题所在；真正被默认打开、导致新用户评论进审核队列的是 **`approve_suspect_users`（默认 `true`）**——邀请制小站新账号信任历史少，很容易被 Discourse 的"疑似可疑用户"启发式判定命中。
+- **修复**：改正 `SiteConfigurator#disable_post_approval_requirements`，改用正确的设置名 `approve_unless_allowed_groups` / `approve_new_topics_unless_allowed_groups`（组列表型，显式写入 admins/moderators/trust_level_0），并把 `approve_suspect_users` 设为 `false`，去掉了不存在的 `Category` 字段判断。已在生产上用 `bin/rails runner` 直接应用这几项设置作为热修复（未等重新 rebuild），代码修正已提交，下次 rebuild 会自然带上一致的版本。
 
 ---
 

@@ -165,23 +165,25 @@ module ZgieBbs
       SiteSetting.nested_replies_default_sort = "old"
     end
 
-    # ZGIE wants unmoderated free speech: no post, reply, or new-topic of any
-    # user's should ever land in the staff review queue awaiting approval
-    # before other members can see it. Covers both the site-wide trust-level
-    # thresholds and the per-category toggles (the latter can be flipped by
-    # an admin in the category settings UI independently of this task, so we
-    # sweep every existing category, not just ones we create).
+    # ZGIE wants unmoderated free speech: no post, reply, or new topic should
+    # ever land in the staff review queue awaiting approval before other
+    # members can see it. This Discourse version has no per-category
+    # approval toggle (the old require_topic_approval/require_reply_approval
+    # category columns are gone) -- approval is entirely governed by these
+    # site-wide settings. approve_suspect_users defaults to true and is the
+    # one most likely to bite new accounts on a low-traffic invite-only site,
+    # since Discourse's spam heuristics flag "suspect" more aggressively when
+    # there is little trust history to go on.
     def disable_post_approval_requirements
       SiteSetting.approve_post_count = 0
-      SiteSetting.approve_unless_trust_level = 0
-      SiteSetting.approve_new_topics_unless_trust_level = 0
+      SiteSetting.approve_suspect_users = false
       SiteSetting.approve_unless_staged = false
-      Category.where(require_topic_approval: true).update_all(
-        require_topic_approval: false
-      )
-      Category.where(require_reply_approval: true).update_all(
-        require_reply_approval: false
-      )
+      SiteSetting.approve_unless_allowed_groups =
+        Group::AUTO_GROUPS.values_at(:admins, :moderators, :trust_level_0)
+          .join("|")
+      SiteSetting.approve_new_topics_unless_allowed_groups =
+        Group::AUTO_GROUPS.values_at(:admins, :moderators, :trust_level_0)
+          .join("|")
     end
 
     def create_categories
